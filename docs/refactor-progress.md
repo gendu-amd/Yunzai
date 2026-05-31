@@ -17,7 +17,8 @@
 - **当前能力地图**:genshin→`account`/`gameRegistry`/`gacha`;miao→`gameData` + 发布 hook `profile:beforeRender`;框架(yunzai-core)→`pluginRegistry`/`renderer` + `core.hook.{emit,emitAsync,veto}`。供需自洽。
 - **已完成(追加)**:`core.hook.emitAsync`(await 异步监听,Yunzai `df88366`);miao 在面板渲染真实点埋 `profile:beforeRender`(miao `6637567`)——**ark 去侵入的官方 seam 就位**(取代覆盖文件/monkey-patch)。baseline `--check` PASS。
 - **已完成(追加)**:退场清单 **A-2**——已迁 8 处(MysInfo/region/dailyNote/payLog/gachaLog/userck×2/bindCookie),分别经 account/gameRegistry/gacha 消费,均验数据一致 + baseline PASS。**⚠️ 全仓复扫纠正**:之前漏 3 处(gsCfg `roleNameToID/roleIdToName` ×2、`NoteUser.forEach`),不能盲迁(换实现会改数据),已记入待办待逐个验证。
-- **A-2 当前状态**:已迁 10 处(含 gsCfg 名↔ID ×2,`f38d2c0`,17 例验等价);**仅剩 1 处** `NoteUser.forEach`(需 `account` 扩 `forEachUser`);死分支(`lib/app/*` 缺失)与框架 config 访问按 ADR-004 后续处理。
+- **✅ A-2 主体完成**:xiaoyao 全部 8 处 genshin 内部 `file://` 依赖均 core 优先 + 带告警回退(genshin 配套 provide:account 扩 checkUidBing/init/bindCookie/forEachUser、新增 gacha;复用 gameRegistry/gameData)。剩:① 静态/动态 import 的物理删除(ADR-004 零命中周期后)② 死分支(`lib/app/*` 缺失)③ 框架 config 访问(非侵入)——均后续。
+- **退场清单**:A-2 主体✅;A-1(ark)⏸延后PC;A-3(框架 srReg/isSr/_miao_path)⬜未动。
 - **ark(A-1)改判**(2026-05-31 调研结论):ark `init.js:491` 是 miao render 的**近乎整段 fork**,增量字段(`dmgRankData/artisRankData/top1/scoreAndRank/selfRank`)**全部来自 ark 排名服务器(网络)**,且需模板名切换(`-ark`)+ 字段重命名(`hsr_paths`→`path`)。**本环境无法比对数据**(依赖网络排名服务),**单 hook 也不足**(需可改写模板名)。→ **A-1 延后到 PC + 排名服务可达**,届时:① 给 `profile:beforeRender` payload 增加可改写的 `tplName`;② ark 改订阅注入排名;③ 删 render 覆盖 + replaceFile。
 - **下一步候选**:A-2 续(`adapter/mys.js` MysInfo → account port,需扩 port `checkUidBing/init` + 真账号验)/ miao `provide('rank')` / `1-05` 第二步懒激活(改 loader,有护栏)。
 
@@ -114,7 +115,8 @@
            - ✅ **`bindCookie`**:`user.js`/`mhyTopUpLogin.js` 的 `new userck(e).bing()` → `account.bindCookie`(genshin `a94d637` + xiaoyao `db83bac`)。写操作不在 dev 执行,等价由同类构造保证 + load/baseline PASS。
       - **⚠️ 纠正(2026-05-31,全仓复扫)**:之前分析按文件逐个扫,**遗漏 3 处** genshin 内部依赖(commit `db83bac` 信息里"已全部迁完"不准确)。全仓 `rg plugins/genshin/` 复扫后完整清单如下,**这 3 处不能盲迁**(换实现会改数据,违反数据一致原则),需各自分析+验证:
         - ✅ `apps/xiaoyao_image.js:92` + `model/note.js:144` → genshin `gsCfg.roleNameToID/roleIdToName` **已迁 `gameData`**(xiaoyao `f38d2c0`)。**等价已证**:genshin gsCfg 第7行 `import {Character} from '#miao.models'`,其方法即 `Character.get(...).id/.name`,与 `gameData.getCharacter()` 同一函数;dev 验 17 例(含别名 雷神/綾華)逐字一致。shim 保持下游调用零改动。
-        - ⬜ `model/user.js:373` → genshin `model/mys/NoteUser.js` 的 `NoteUser.forEach`(遍历所有已绑 CK,批量签到)。需设计 `account` 扩展(如 `forEachUser`)。**最后一处**。
+        - ✅ `model/user.js:373` → genshin `NoteUser.forEach` **已迁 `account.forEachUser`**(genshin `3a05560` + xiaoyao `4aa1f48`)。dev 验计数一致(users:1,mys:1)。
+      - **✅ A-2 主体完成(2026-05-31)**:全仓复扫确认 xiaoyao 对 genshin 内部的**全部 8 处 `file://` 依赖**均改为"`core.require()` 优先 + 带 `[deprecated]` 告警回退"(MysInfo/dailyNote→account、region→gameRegistry、payLog/gachaLog→gacha、绑CK→account.bindCookie、名↔ID→gameData、遍历CK→account.forEachUser)。旧路径全部退到 else 分支作 fallback,按 ADR-004 待零命中周期后删除静态/动态 import。
       - **已迁 5 处(均在 fallback 分支保留旧路径)**:MysInfo/payLog/gachaLog/userck(×2)→ account/gacha;region→gameRegistry;dailyNote→account。
         3. **框架 lib/ 访问(非跨插件侵入,低优先)**:`gsCfg.js:40`/`mihoyoApi.js:575` import 框架 `lib/config/config.js`(存在)——合法宿主访问,暂留。
         4. **死分支(框架 `lib/app/*` 实际缺失,V2 兼容)**:`Note.js:118` `lib/app/mysApi.js`、`user.js:202` `lib/app/gachaLog.js`、`user.js:392`/`mhyTopUpLogin.js:114` `lib/app/dailyNote.js`、`Note.js:196` `lib/render.js` ——**这些路径框架内不存在**,在 V2 分支(V3 环境走不到/import 即抛错被吞),属死代码,清理优先级低。
