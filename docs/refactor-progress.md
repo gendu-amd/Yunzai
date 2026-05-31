@@ -14,8 +14,9 @@
 - **闭环已验证**:dev 测试经 `core.require('account')` 取到真实 dailyNote(`retcode=0`),provider→core→consumer 跑通。
 - **已完成(追加)**:`1-02b` genshin 再提供 `gameRegistry`(genshin 仓 `bd742f8`,dev 值校验全对);**`0-00` 回归基线**(`.devenv/baseline.sh` + 快照,`--check` PASS)——**Phase D / 懒激活护栏就位**。
 - **已完成(追加)**:miao 提供 `gameData`(miao `e0ef478`)、**框架提供 `renderer`(带降级)**(Yunzai `c29303e`)→ **manifest 供需闭环已归零(`checkRequires={}`)**;ADR-004 退场标准固化(`0ee4b44`)。均 baseline `--check` PASS。
-- **当前能力地图**:genshin→`account`/`gameRegistry`;miao→`gameData`;框架(yunzai-core)→`pluginRegistry`/`renderer`。供需自洽。
-- **下一步候选**:miao `provide('rank')` + 埋 hook 点 `profile:beforeRender`(给 ark 去侵入铺路)/ `1-05` 第二步懒激活(改 loader,有护栏)/ 生产消费者迁移(C,延后 PC 出图终验)。
+- **当前能力地图**:genshin→`account`/`gameRegistry`;miao→`gameData` + 发布 hook `profile:beforeRender`;框架(yunzai-core)→`pluginRegistry`/`renderer` + `core.hook.{emit,emitAsync,veto}`。供需自洽。
+- **已完成(追加)**:`core.hook.emitAsync`(await 异步监听,Yunzai `df88366`);miao 在面板渲染真实点埋 `profile:beforeRender`(miao `6637567`)——**ark 去侵入的官方 seam 就位**(取代覆盖文件/monkey-patch)。baseline `--check` PASS。
+- **下一步候选**:**ark 改订阅 `profile:beforeRender` → 删 render 覆盖 + replaceFile**(退场清单第 2 项,需 PC 出图终验)/ miao `provide('rank')` / `1-05` 第二步懒激活(改 loader,有护栏)/ 生产消费者迁移(C,延后 PC)。
 
 ---
 
@@ -101,6 +102,7 @@
   - **退场清单(tracking,做到一条勾一条)**:
     - [ ] xiaoyao `file://` import genshin `mysInfo/gachaLog/payLog/games` → 改 `core.require('account'/'gameRegistry')`(满足 1-4 后删)
     - [ ] ark `#ark替换文件` + monkey-patch miao → 改 `core.hook.on(...)` 订阅(满足 1-4 后删)
+      - **seam 已就位**(2026-05-31,miao `6637567`):miao 在 `ProfileDetail.render` 真实渲染点发布 `profile:beforeRender`(异步,可改写 renderData),正是 ark `init.js:491` 覆盖 render 注入排名的同一点。**待办**:ark 改订阅 → 删 `init.js` 的 render 覆盖 + `replaceFile` 覆盖(需 PC 出图终验后删)。
     - [ ] genshin/miao 内部跨插件直接 import → 收敛到 `core.require()`
     - [ ] 框架 `lib/` 内 `srReg/isSr/_miao_path` 等游戏硬编码 → 下沉 hook / gameRegistry(满足 1-4 后删)
   - **机制**:旧路径加 `logger.warn('[deprecated] …,请改用 core.require(...)')`;退场清单随每次迁移更新勾选,P4 收敛时清单清空=垫片删尽。
