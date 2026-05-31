@@ -18,6 +18,8 @@
 - **已完成(追加)**:`core.hook.emitAsync`(await 异步监听,Yunzai `df88366`);miao 在面板渲染真实点埋 `profile:beforeRender`(miao `6637567`)——**ark 去侵入的官方 seam 就位**(取代覆盖文件/monkey-patch)。baseline `--check` PASS。
 - **已完成(追加)**:退场清单 **A-2**——已迁 8 处(MysInfo/region/dailyNote/payLog/gachaLog/userck×2/bindCookie),分别经 account/gameRegistry/gacha 消费,均验数据一致 + baseline PASS。**⚠️ 全仓复扫纠正**:之前漏 3 处(gsCfg `roleNameToID/roleIdToName` ×2、`NoteUser.forEach`),不能盲迁(换实现会改数据),已记入待办待逐个验证。
 - **✅ A-2 主体完成**:xiaoyao 全部 8 处 genshin 内部 `file://` 依赖均 core 优先 + 带告警回退(genshin 配套 provide:account 扩 checkUidBing/init/bindCookie/forEachUser、新增 gacha;复用 gameRegistry/gameData)。剩:① 静态/动态 import 的物理删除(ADR-004 零命中周期后)② 死分支(`lib/app/*` 缺失)③ 框架 config 访问(非侵入)——均后续。
+- **当前能力地图**:genshin→`account`/`gameRegistry`/`gacha`;miao→`gameData`/`rank` + hook `profile:beforeRender`;框架→`pluginRegistry`/`renderer`/`core.hook.*`。
+- **A-3 决策(2026-05-31)**:框架游戏硬编码分析后,确认 loader 的 `srReg/zzzReg` 不宜指向 genshin gameRegistry(L0→L2 层级倒挂);**正确解=框架自有"游戏前缀注册表"+ 插件注册,并入 Phase D/`1-05` 第二步懒激活**一起做。`_miao_path` 框架→miao 耦合属大件,单独立项。`createMysApi` 布尔兼容不动。
 - **退场清单**:A-2 主体✅;A-1(ark)⏸延后PC;A-3(框架 srReg/isSr/_miao_path)⬜未动。
 - **ark(A-1)改判**(2026-05-31 调研结论):ark `init.js:491` 是 miao render 的**近乎整段 fork**,增量字段(`dmgRankData/artisRankData/top1/scoreAndRank/selfRank`)**全部来自 ark 排名服务器(网络)**,且需模板名切换(`-ark`)+ 字段重命名(`hsr_paths`→`path`)。**本环境无法比对数据**(依赖网络排名服务),**单 hook 也不足**(需可改写模板名)。→ **A-1 延后到 PC + 排名服务可达**,届时:① 给 `profile:beforeRender` payload 增加可改写的 `tplName`;② ark 改订阅注入排名;③ 删 render 覆盖 + replaceFile。
 - **下一步候选**:A-2 续(`adapter/mys.js` MysInfo → account port,需扩 port `checkUidBing/init` + 真账号验)/ miao `provide('rank')` / `1-05` 第二步懒激活(改 loader,有护栏)。
@@ -63,8 +65,8 @@
 - [ ] `1-06` 协议文档 + 版本化
 
 ### Chapter 2（P2）· 核心面向契约
-- [~] genshin:`provide('account')`✅`provide('gameRegistry')`✅;region/biz/路径收敛 games.js(已有 SSOT,待消费方接入);getData 结构化(待)
-- [~] miao:`provide('gameData')`✅(2026-05-31,**miao 仓** commit `e0ef478`,verify+baseline `--check` PASS):`models/gameDataPort.js`(包 Character/Weapon/ArtifactSet/Player)注册 `gameData` + `manifest.js` 声明 `provides=[gameData] requires=[account,renderer]`;dev 实测 `getCharacter(胡桃)={name,id:10000046,elem:pyro,star:5}`、`resolveName(雷神)=雷电将军`、`checkRequires={miao:[renderer]}`(**account 已被 genshin 满足→首个真实供需闭环**);miao 内部调用全保留(非侵入)。**待**:`provide('rank')` + 埋 hook 点(profile:beforeRender)
+- [~] genshin:`provide('account')`✅`provide('gameRegistry')`✅`provide('gacha')`✅;region/biz/路径收敛 games.js(已有 SSOT,xiaoyao 已接入);getData 结构化(待)
+- [~] miao:`provide('gameData')`✅`provide('rank')`✅(群排行,2026-05-31 miao `60f68bd`,工厂包 ProfileRank,dev 验同类+静态一致,baseline PASS);全服排名(ark)规划 `rank.getGlobalRank?`(2026-05-31,**miao 仓** commit `e0ef478`,verify+baseline `--check` PASS):`models/gameDataPort.js`(包 Character/Weapon/ArtifactSet/Player)注册 `gameData` + `manifest.js` 声明 `provides=[gameData] requires=[account,renderer]`;dev 实测 `getCharacter(胡桃)={name,id:10000046,elem:pyro,star:5}`、`resolveName(雷神)=雷电将军`、`checkRequires={miao:[renderer]}`(**account 已被 genshin 满足→首个真实供需闭环**);miao 内部调用全保留(非侵入)。**待**:`provide('rank')` + 埋 hook 点(profile:beforeRender)
 - [x] 框架提供 `renderer` 能力(2026-05-31,Yunzai `c29303e`,verify+baseline `--check` PASS):`lib/contracts/rendererPort.js` 包 `global.Renderer` 后端,`core.provide('renderer')` **带文本降级**(后端缺失/Chromium 不可用/截图失败 → 返回 fallbackText);注册框架内建 manifest `yunzai-core`(provides=[pluginRegistry, renderer])。dev 实测:本机 `available=false`(诚实上报)、`render→fallbackText`(降级生效)、`providersOf(renderer)=[yunzai-core]`、**`checkRequires={}`(miao 的 account+renderer 全满足,供需闭环归零)**。非侵入(renderImg/Common.render 全保留)。
 - [ ] 框架 render 去 `_miao_path` 硬编码;游戏前缀下沉 hook
 
