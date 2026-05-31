@@ -13,7 +13,8 @@
 - **已完成**:L1 契约层**立(`9183ad3`)+ 挂载(`bbd3f82`)+ 首个 provider account(genshin 仓 `a5192d9`)**,均 verify PASS;运行 bot 实测 `account` 已注册。
 - **闭环已验证**:dev 测试经 `core.require('account')` 取到真实 dailyNote(`retcode=0`),provider→core→consumer 跑通。
 - **已完成(追加)**:`1-02b` genshin 再提供 `gameRegistry`(genshin 仓 `bd742f8`,dev 值校验全对);**`0-00` 回归基线**(`.devenv/baseline.sh` + 快照,`--check` PASS)——**Phase D / 懒激活护栏就位**。
-- **下一步候选**:`1-05` PluginManifest 规范(声明式那半安全可做;懒激活那半现已有 `0-00` 护栏可改)/ 生产消费者迁移(延后到 PC 可验证)。
+- **已完成(追加)**:`1-05` 第一步声明式 manifest(`pluginRegistry` + genshin manifest,Yunzai `30794c2` / genshin `a103040`,baseline `--check` PASS)。
+- **下一步候选**:`1-05` 第二步懒激活(改 loader,有 `0-00` 护栏)/ 生产消费者迁移(延后到 PC 可验证)/ miao 提供 `gameData` 能力。
 
 ---
 
@@ -48,7 +49,11 @@
 - [~] `1-04` **消费者闭环已验证(real data)**:一次性 dev 命令经 `Bot.core.require('account')` → `getUid` 返回真实 uid `100098441`、`getData(e,'dailyNote')` 返回 **`retcode=0`**(真取数)。**provider(genshin)→core→consumer 在运行 bot 里跑通**。dev 测试已删、不提交。
   - ⚠️ 诚实记录:原计划改 xiaoyao `Note.js` 作首个**生产**消费者,但本环境 `sys.Note` 未开 + `#体力` 被 genshin `dailyNote` 抢占 → 该路径**根本不执行、无法验证**,故**已 revert,不提交未验证代码**。
   - 待办:**生产消费者迁移延后到可验证环境**(PC/真实配置:命令真正路由到目标消费者处)。选消费者时先确认"该命令确实路由到它"。
-- [ ] `1-05` PluginManifest 规范(contributes/requires/provides/version)+ 懒激活
+- [~] `1-05` PluginManifest:**第一步声明式那半已完成**(2026-05-31,Yunzai `30794c2` + genshin 仓 `a103040`,verify+baseline `--check` PASS):
+  - L1 宿主内建 `pluginRegistry`(`lib/contracts/pluginRegistry.js`):`register/get/list/names/providersOf/consumersOf/hookDeclarers/checkRequires/validate`;经 `core.provide('pluginRegistry')` 暴露 + 别名 `core.manifest`;在插件加载前就绪。
+  - genshin 声明首份 `manifest.js`:`provides=[account, gameRegistry]`、`type=data-provider`、`guoba=true`;dev 实测 `providersOf(account)=[genshin]`、`checkRequires={}`。
+  - **纯加层、不触碰 loader/派发** → `baseline --check` PASS(零回归)。
+  - **第二步(待)**:懒激活(命令前缀命中才激活,改 loader)——现已有 `0-00` 护栏,可安全做。
 - [ ] `1-06` 协议文档 + 版本化
 
 ### Chapter 2（P2）· 核心面向契约
