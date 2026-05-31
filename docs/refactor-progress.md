@@ -98,6 +98,9 @@
   - `emit`=Waterfall(可改 ctx)、`filter`=Bail(任一 false 否决)、`notify`=Series(纯通知);named tap 便于 tracing。
 - **ADR-003 · 资源/数据层独立版本化** · `已定` · 2026-05-31
   - miao `meta/calc/模板`、术语/卡池等高频数据抽成可独立更新的数据包,与引擎解耦;根治 ark 覆盖/喵喵更新冲突。
+- **ADR-005 · 懒激活设计(manifest 声明触发器 + opt-in + eager 兜底)** · `评审中` · 2026-05-31
+  - 详见 `docs/lazy-activation-design.md`。核心:① 根本约束=`rule` 正则在插件代码内,**必须 manifest 声明触发器**才能"命中才加载"(VS Code activationEvents 模型);② **正确性红线**=含 `accept/task/handler/getContext/init` 的插件**强制 eager**(否则功能缺失);③ **opt-in**,未声明 `activation` 的插件零变化;④ manifest 触发器只决定"何时加载",**最终路由仍走插件真实 rule**→ 与 eager 等价;⑤ 分期 L-1~L-5,每步 `baseline --check` 守。
+  - **待评审决策点**:opt-in+eager 默认 / 不可懒红线 / manifest.js 零副作用约定 / 实施顺序。通过后从 L-1 写码。
 - **ADR-004 · 旧路径退场标准(避免"永远到不了的 P4")** · `已定` · 2026-05-31
   - **背景**:Phase B 期间"新老并存、旧路径留 deprecated 垫片",但若无可度量的退场标准,垫片会永久滞留。本 ADR 把"何时可删旧路径"写成硬门槛 + 逐条清单。
   - **退场标准(逐能力,全满足才删对应旧路径)**:
