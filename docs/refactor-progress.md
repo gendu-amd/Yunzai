@@ -13,8 +13,8 @@
 - **已完成**:L1 契约层**立(`9183ad3`)+ 挂载(`bbd3f82`)+ 首个 provider account(genshin 仓 `a5192d9`)**,均 verify PASS;运行 bot 实测 `account` 已注册。
 - **闭环已验证**:dev 测试经 `core.require('account')` 取到真实 dailyNote(`retcode=0`),provider→core→consumer 跑通。
 - **已完成(追加)**:`1-02b` genshin 再提供 `gameRegistry`(genshin 仓 `bd742f8`,dev 值校验全对);**`0-00` 回归基线**(`.devenv/baseline.sh` + 快照,`--check` PASS)——**Phase D / 懒激活护栏就位**。
-- **已完成(追加)**:`1-05` 第一步声明式 manifest(`pluginRegistry` + genshin manifest,Yunzai `30794c2` / genshin `a103040`,baseline `--check` PASS)。
-- **下一步候选**:`1-05` 第二步懒激活(改 loader,有 `0-00` 护栏)/ 生产消费者迁移(延后到 PC 可验证)/ miao 提供 `gameData` 能力。
+- **已完成(追加)**:`1-05` 第一步声明式 manifest(`pluginRegistry`,Yunzai `30794c2`);**miao 提供 `gameData` + manifest**(miao 仓 `e0ef478`)——`checkRequires` 形成首个真实供需闭环(`account` 被 genshin 满足、`renderer` 待补);ADR-004 退场标准固化(`0ee4b44`)。均 baseline `--check` PASS。
+- **下一步候选**:`renderer` 统一出图能力(补齐 miao 的 requires)/ miao `provide('rank')` + 埋 hook 点 / `1-05` 第二步懒激活(改 loader,有护栏)/ 生产消费者迁移(延后 PC)。
 
 ---
 
@@ -58,7 +58,7 @@
 
 ### Chapter 2（P2）· 核心面向契约
 - [~] genshin:`provide('account')`✅`provide('gameRegistry')`✅;region/biz/路径收敛 games.js(已有 SSOT,待消费方接入);getData 结构化(待)
-- [ ] miao:`provide('gameData','rank')` + 埋 hook 点(profile:beforeRender 等);Base 查表;meta 路径 `Meta.path()`
+- [~] miao:`provide('gameData')`✅(2026-05-31,**miao 仓** commit `e0ef478`,verify+baseline `--check` PASS):`models/gameDataPort.js`(包 Character/Weapon/ArtifactSet/Player)注册 `gameData` + `manifest.js` 声明 `provides=[gameData] requires=[account,renderer]`;dev 实测 `getCharacter(胡桃)={name,id:10000046,elem:pyro,star:5}`、`resolveName(雷神)=雷电将军`、`checkRequires={miao:[renderer]}`(**account 已被 genshin 满足→首个真实供需闭环**);miao 内部调用全保留(非侵入)。**待**:`provide('rank')` + 埋 hook 点(profile:beforeRender)
 - [ ] 框架 render 去 `_miao_path` 硬编码;游戏前缀下沉 hook
 
 ### P3 · 扩展去侵入（未开始）
