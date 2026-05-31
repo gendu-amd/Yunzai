@@ -16,7 +16,7 @@
 - **已完成(追加)**:miao 提供 `gameData`(miao `e0ef478`)、**框架提供 `renderer`(带降级)**(Yunzai `c29303e`)→ **manifest 供需闭环已归零(`checkRequires={}`)**;ADR-004 退场标准固化(`0ee4b44`)。均 baseline `--check` PASS。
 - **当前能力地图**:genshin→`account`/`gameRegistry`;miao→`gameData` + 发布 hook `profile:beforeRender`;框架(yunzai-core)→`pluginRegistry`/`renderer` + `core.hook.{emit,emitAsync,veto}`。供需自洽。
 - **已完成(追加)**:`core.hook.emitAsync`(await 异步监听,Yunzai `df88366`);miao 在面板渲染真实点埋 `profile:beforeRender`(miao `6637567`)——**ark 去侵入的官方 seam 就位**(取代覆盖文件/monkey-patch)。baseline `--check` PASS。
-- **已完成(追加)**:退场清单 **A-2 起步**——xiaoyao `apps/user.js` region 改走 `core.require('gameRegistry')`(xiaoyao `61cff46`),12 例数据逐字一致,baseline `--check` PASS。
+- **已完成(追加)**:退场清单 **A-2 推进**——xiaoyao `apps/user.js` region 改走 `gameRegistry`(`61cff46`,12 例一致);`adapter/mys.js` MysInfo 改走 `account`(xiaoyao `5ed64b2` + genshin port 补 `checkUidBing/init` `6aeacfe`,真账号验 3 方法一致)。均 baseline `--check` PASS。
 - **ark(A-1)改判**(2026-05-31 调研结论):ark `init.js:491` 是 miao render 的**近乎整段 fork**,增量字段(`dmgRankData/artisRankData/top1/scoreAndRank/selfRank`)**全部来自 ark 排名服务器(网络)**,且需模板名切换(`-ark`)+ 字段重命名(`hsr_paths`→`path`)。**本环境无法比对数据**(依赖网络排名服务),**单 hook 也不足**(需可改写模板名)。→ **A-1 延后到 PC + 排名服务可达**,届时:① 给 `profile:beforeRender` payload 增加可改写的 `tplName`;② ark 改订阅注入排名;③ 删 render 覆盖 + replaceFile。
 - **下一步候选**:A-2 续(`adapter/mys.js` MysInfo → account port,需扩 port `checkUidBing/init` + 真账号验)/ miao `provide('rank')` / `1-05` 第二步懒激活(改 loader,有护栏)。
 
@@ -104,7 +104,8 @@
   - **退场清单(tracking,做到一条勾一条)**:
     - [~] xiaoyao `file://` import genshin `mysInfo/gachaLog/payLog/games` → 改 `core.require('account'/'gameRegistry')`(满足 1-4 后删)
       - **A-2 起步**(2026-05-31,xiaoyao 仓 `61cff46`):`apps/user.js` 的 `getRegion` 用法已改走 `core.require('gameRegistry').region`,回退旧直连带 deprecation 告警;dev 验 12 例 region 新旧逐字一致(纯函数、无需账号)。line 15 静态 import 暂留 fallback(零命中周期后删)。
-      - **待**:`adapter/mys.js` 的 `MysInfo.{get,getUid,checkUidBing,init}` → 需先给 account port 补 `checkUidBing/init`,再迁(需真账号验数据一致);`Note.js`/`mhyTopUpLogin.js` 的 `dailyNote` file:// 同理。
+      - **A-2 续**(2026-05-31,xiaoyao `5ed64b2` + genshin `6aeacfe`):account port 补 `checkUidBing/init`;`adapter/mys.js` 的 `MysInfo.{get,getUid,checkUidBing,init}` 全改走 `core.require('account')`(回退旧直连带告警)。dev 真账号验 `checkUidBing/getUid/init` 与旧 MysInfo 逐项一致(uid=100098441)。line 1 静态 import 暂留 fallback。
+      - **待**:`Note.js`/`mhyTopUpLogin.js` 的 `dailyNote` file://、`components/Data.js`、`model/gsCfg.js`、`model/mys/mihoyoApi.js` 的 `lib/config` file:// 等(逐个评估:能力是否该进 account/gameRegistry,还是属框架 config)。
     - [ ] ark `#ark替换文件` + monkey-patch miao → 改 `core.hook.on(...)` 订阅(满足 1-4 后删)
       - **seam 已就位**(2026-05-31,miao `6637567`):miao 在 `ProfileDetail.render` 真实渲染点发布 `profile:beforeRender`(异步,可改写 renderData),正是 ark `init.js:491` 覆盖 render 注入排名的同一点。**待办**:ark 改订阅 → 删 `init.js` 的 render 覆盖 + `replaceFile` 覆盖(需 PC 出图终验后删)。
     - [ ] genshin/miao 内部跨插件直接 import → 收敛到 `core.require()`
