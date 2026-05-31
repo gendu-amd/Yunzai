@@ -1,6 +1,14 @@
 # 懒激活（Lazy Activation）设计文档 · 评审稿
 
-> 状态：**设计评审中（未写码）** · 2026-05-31 · 对应 `1-05` 第二步 / Phase D
+> 状态：**L-1/L-2/L-3 已实现并验证** · 2026-05-31 · 对应 `1-05` 第二步 / Phase D
+>
+> 实现进度(commit `b2e589e`):
+> - ✅ **L-1 机制**:loader `readActivation/registerLazy/activateLazy`;deal() 命中激活。
+> - ✅ **L-2 manifest 静态发现**:`readActivation` 读目录型插件 `manifest.js` 的 `activation`。
+> - ✅ **L-3 试点验证**:临时 `_lazytest` 插件实测——启动 `懒激活待命[1个]`(不 eager 加载)、首发 `#懒测试`→`懒激活[_lazytest]`(import 一次)→正常响应、再发不重复 import;baseline `--check` PASS;验完已删。
+> - ⏳ **L-4/L-5**:推广文档 + 核心仓插件逐个 opt-in(每个过 baseline + 等价验证)。
+>
+> **实现细化(对 §3 的诚实修正)**:红线(accept/task/handler)**无法在不加载插件的前提下检测**(与 rule 同样的鸡生蛋)。故改为:**作者经声明 `activation` 自负"懒安全"**(对标 VS Code package.json),框架在**首次激活后做事后告警**(发现 accept/task/handler 则提示建议改 eager)。即"作者声明 + 框架事后兜底告警",而非"框架加载期强制判定"。
 > 目标读者：评审后据此实现。实现前请确认本文"正确性约束"全部接受。
 
 ## 1. 目标与动机

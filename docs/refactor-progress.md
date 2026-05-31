@@ -61,7 +61,7 @@
   - L1 宿主内建 `pluginRegistry`(`lib/contracts/pluginRegistry.js`):`register/get/list/names/providersOf/consumersOf/hookDeclarers/checkRequires/validate`;经 `core.provide('pluginRegistry')` 暴露 + 别名 `core.manifest`;在插件加载前就绪。
   - genshin 声明首份 `manifest.js`:`provides=[account, gameRegistry]`、`type=data-provider`、`guoba=true`;dev 实测 `providersOf(account)=[genshin]`、`checkRequires={}`。
   - **纯加层、不触碰 loader/派发** → `baseline --check` PASS(零回归)。
-  - **第二步(待)**:懒激活(命令前缀命中才激活,改 loader)——现已有 `0-00` 护栏,可安全做。
+  - **第二步 ✅ L-1/L-2/L-3(2026-05-31,Yunzai `b2e589e`)**:懒激活机制落地——manifest.activation 触发器→懒占位→命中 import→eager 兜底;试点 `_lazytest` 端到端验证(懒待命/命中加载一次/不重复/路由正确)、baseline `--check` PASS、试点已删。红线改"作者声明 activation 自负懒安全 + 框架事后告警"(无法加载前检测,见 `docs/lazy-activation-design.md`)。待 L-4(推广文档)/L-5(核心插件 opt-in)。
 - [ ] `1-06` 协议文档 + 版本化
 
 ### Chapter 2（P2）· 核心面向契约
@@ -98,7 +98,7 @@
   - `emit`=Waterfall(可改 ctx)、`filter`=Bail(任一 false 否决)、`notify`=Series(纯通知);named tap 便于 tracing。
 - **ADR-003 · 资源/数据层独立版本化** · `已定` · 2026-05-31
   - miao `meta/calc/模板`、术语/卡池等高频数据抽成可独立更新的数据包,与引擎解耦;根治 ark 覆盖/喵喵更新冲突。
-- **ADR-005 · 懒激活设计(manifest 声明触发器 + opt-in + eager 兜底)** · `评审中` · 2026-05-31
+- **ADR-005 · 懒激活设计(manifest 声明触发器 + opt-in + eager 兜底)** · `已定·L-1/L-2/L-3 已实现` · 2026-05-31
   - 详见 `docs/lazy-activation-design.md`。核心:① 根本约束=`rule` 正则在插件代码内,**必须 manifest 声明触发器**才能"命中才加载"(VS Code activationEvents 模型);② **正确性红线**=含 `accept/task/handler/getContext/init` 的插件**强制 eager**(否则功能缺失);③ **opt-in**,未声明 `activation` 的插件零变化;④ manifest 触发器只决定"何时加载",**最终路由仍走插件真实 rule**→ 与 eager 等价;⑤ 分期 L-1~L-5,每步 `baseline --check` 守。
   - **待评审决策点**:opt-in+eager 默认 / 不可懒红线 / manifest.js 零副作用约定 / 实施顺序。通过后从 L-1 写码。
 - **ADR-004 · 旧路径退场标准(避免"永远到不了的 P4")** · `已定` · 2026-05-31
