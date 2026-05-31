@@ -13,8 +13,9 @@
 - **已完成**:L1 契约层**立(`9183ad3`)+ 挂载(`bbd3f82`)+ 首个 provider account(genshin 仓 `a5192d9`)**,均 verify PASS;运行 bot 实测 `account` 已注册。
 - **闭环已验证**:dev 测试经 `core.require('account')` 取到真实 dailyNote(`retcode=0`),provider→core→consumer 跑通。
 - **已完成(追加)**:`1-02b` genshin 再提供 `gameRegistry`(genshin 仓 `bd742f8`,dev 值校验全对);**`0-00` 回归基线**(`.devenv/baseline.sh` + 快照,`--check` PASS)——**Phase D / 懒激活护栏就位**。
-- **已完成(追加)**:`1-05` 第一步声明式 manifest(`pluginRegistry`,Yunzai `30794c2`);**miao 提供 `gameData` + manifest**(miao 仓 `e0ef478`)——`checkRequires` 形成首个真实供需闭环(`account` 被 genshin 满足、`renderer` 待补);ADR-004 退场标准固化(`0ee4b44`)。均 baseline `--check` PASS。
-- **下一步候选**:`renderer` 统一出图能力(补齐 miao 的 requires)/ miao `provide('rank')` + 埋 hook 点 / `1-05` 第二步懒激活(改 loader,有护栏)/ 生产消费者迁移(延后 PC)。
+- **已完成(追加)**:miao 提供 `gameData`(miao `e0ef478`)、**框架提供 `renderer`(带降级)**(Yunzai `c29303e`)→ **manifest 供需闭环已归零(`checkRequires={}`)**;ADR-004 退场标准固化(`0ee4b44`)。均 baseline `--check` PASS。
+- **当前能力地图**:genshin→`account`/`gameRegistry`;miao→`gameData`;框架(yunzai-core)→`pluginRegistry`/`renderer`。供需自洽。
+- **下一步候选**:miao `provide('rank')` + 埋 hook 点 `profile:beforeRender`(给 ark 去侵入铺路)/ `1-05` 第二步懒激活(改 loader,有护栏)/ 生产消费者迁移(C,延后 PC 出图终验)。
 
 ---
 
@@ -59,6 +60,7 @@
 ### Chapter 2（P2）· 核心面向契约
 - [~] genshin:`provide('account')`✅`provide('gameRegistry')`✅;region/biz/路径收敛 games.js(已有 SSOT,待消费方接入);getData 结构化(待)
 - [~] miao:`provide('gameData')`✅(2026-05-31,**miao 仓** commit `e0ef478`,verify+baseline `--check` PASS):`models/gameDataPort.js`(包 Character/Weapon/ArtifactSet/Player)注册 `gameData` + `manifest.js` 声明 `provides=[gameData] requires=[account,renderer]`;dev 实测 `getCharacter(胡桃)={name,id:10000046,elem:pyro,star:5}`、`resolveName(雷神)=雷电将军`、`checkRequires={miao:[renderer]}`(**account 已被 genshin 满足→首个真实供需闭环**);miao 内部调用全保留(非侵入)。**待**:`provide('rank')` + 埋 hook 点(profile:beforeRender)
+- [x] 框架提供 `renderer` 能力(2026-05-31,Yunzai `c29303e`,verify+baseline `--check` PASS):`lib/contracts/rendererPort.js` 包 `global.Renderer` 后端,`core.provide('renderer')` **带文本降级**(后端缺失/Chromium 不可用/截图失败 → 返回 fallbackText);注册框架内建 manifest `yunzai-core`(provides=[pluginRegistry, renderer])。dev 实测:本机 `available=false`(诚实上报)、`render→fallbackText`(降级生效)、`providersOf(renderer)=[yunzai-core]`、**`checkRequires={}`(miao 的 account+renderer 全满足,供需闭环归零)**。非侵入(renderImg/Common.render 全保留)。
 - [ ] 框架 render 去 `_miao_path` 硬编码;游戏前缀下沉 hook
 
 ### P3 · 扩展去侵入（未开始）
