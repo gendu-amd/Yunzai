@@ -20,6 +20,7 @@
     "chalk": "^5.6.2",
     "chokidar": "^5.0.0",
     "compression": "^1.8.1",
+    "cordis": "3.18.1",
     "es-toolkit": "^1.46.1",
     "express": "^5.2.1",
     "file-type": "^22.0.1",
