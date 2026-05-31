@@ -89,6 +89,19 @@
   - `emit`=Waterfall(可改 ctx)、`filter`=Bail(任一 false 否决)、`notify`=Series(纯通知);named tap 便于 tracing。
 - **ADR-003 · 资源/数据层独立版本化** · `已定` · 2026-05-31
   - miao `meta/calc/模板`、术语/卡池等高频数据抽成可独立更新的数据包,与引擎解耦;根治 ark 覆盖/喵喵更新冲突。
+- **ADR-004 · 旧路径退场标准(避免"永远到不了的 P4")** · `已定` · 2026-05-31
+  - **背景**:Phase B 期间"新老并存、旧路径留 deprecated 垫片",但若无可度量的退场标准,垫片会永久滞留。本 ADR 把"何时可删旧路径"写成硬门槛 + 逐条清单。
+  - **退场标准(逐能力,全满足才删对应旧路径)**:
+    1. **新路径可用**:provider 已 `core.provide`,且 dev/真实数据验证通过(对出图功能须 **PC 出图终验**)。
+    2. **消费者清零**:全仓搜索确认无任何调用方仍走旧路径(`file://` / 直接 import 内部文件);消费者已切 `core.require()`。
+    3. **deprecation 缓冲**:旧路径保留并打 **deprecation 告警日志**至少一个发布周期,期间**实测零命中**(给生态第三方插件迁移缓冲)。
+    4. **回归护栏**:`baseline.sh --check` PASS;改派发相关的另跑对应验证。
+  - **退场清单(tracking,做到一条勾一条)**:
+    - [ ] xiaoyao `file://` import genshin `mysInfo/gachaLog/payLog/games` → 改 `core.require('account'/'gameRegistry')`(满足 1-4 后删)
+    - [ ] ark `#ark替换文件` + monkey-patch miao → 改 `core.hook.on(...)` 订阅(满足 1-4 后删)
+    - [ ] genshin/miao 内部跨插件直接 import → 收敛到 `core.require()`
+    - [ ] 框架 `lib/` 内 `srReg/isSr/_miao_path` 等游戏硬编码 → 下沉 hook / gameRegistry(满足 1-4 后删)
+  - **机制**:旧路径加 `logger.warn('[deprecated] …,请改用 core.require(...)')`;退场清单随每次迁移更新勾选,P4 收敛时清单清空=垫片删尽。
 
 ---
 
