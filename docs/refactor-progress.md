@@ -12,8 +12,8 @@
 - **当前**:HEAD=`78758a6`(干净起点)。`ADR-001` 已定:**复用 Cordis**(POC 实证 Service/dispose/hook 全通过)。
 - **已完成**:L1 契约层**立(`9183ad3`)+ 挂载(`bbd3f82`)+ 首个 provider account(genshin 仓 `a5192d9`)**,均 verify PASS;运行 bot 实测 `account` 已注册。
 - **闭环已验证**:dev 测试经 `core.require('account')` 取到真实 dailyNote(`retcode=0`),provider→core→consumer 跑通。
-- **已完成(追加)**:`1-02b` genshin 再提供 `gameRegistry` 能力(genshin 仓 `bd742f8`),dev 值校验全对(纯配置、本环境可完整验证)。
-- **下一步候选**:`1-05` PluginManifest 规范 / 生产消费者迁移(延后到 PC 可验证)。改真实派发(Phase D)前必补 `0-00` 基线。
+- **已完成(追加)**:`1-02b` genshin 再提供 `gameRegistry`(genshin 仓 `bd742f8`,dev 值校验全对);**`0-00` 回归基线**(`.devenv/baseline.sh` + 快照,`--check` PASS)——**Phase D / 懒激活护栏就位**。
+- **下一步候选**:`1-05` PluginManifest 规范(声明式那半安全可做;懒激活那半现已有 `0-00` 护栏可改)/ 生产消费者迁移(延后到 PC 可验证)。
 
 ---
 
@@ -33,7 +33,9 @@
 ### Chapter 0（P0）— ⚠️ 已 revert,重新定义
 > 原 `0-01/02/03` 是补丁式脚手架,已全部 revert(见 §0 纠偏)。P0 重新定位为"**只做不可省的地基**":回归基线。派发/错误隔离/生命周期等**结构问题**统一在 keystone(Context 模型)里"由设计解决",不再单独打补丁。
 - [-] `0-01/02/03`(顶层错误边界 / 逐插件隔离 / adapter 幂等)→ **已 revert**(补丁式,不推进架构;正解在 keystone)
-- [ ] `0-00` **回归基线**:命令→匹配插件(fnc)→完成/异常 的快照,作为改派发/生命周期前的护栏(开始改真实派发前做)
+- [x] `0-00` **回归基线**(2026-05-31,本地工具 `.devenv/baseline.sh`,`--check` PASS):14 条命令语料(帮助/状态/版本 + `#`gs/`*`sr/`%`zzz 多游戏前缀 + 抽卡/面板/素材)→ 采集每条命中的 `[plugin(fnc)]` 序列为快照 `.devenv/baseline/dispatch.snapshot`。采集点=loader 在 handler 执行**前**打的 `[开始处理]`,只反映**匹配决策**、与网络/出图无关 → 确定性可复现。`--check` 重跑逐命令 diff,作为**改真实派发/懒激活(Phase D)前后的护栏**。harness 在仓外(零污染,同 `verify.sh`)。
+  - 快照样例:`#帮助→[喵喵:喵喵帮助(help)]`、`#状态→[状态统计(status)]`、`#体力/*体力/%体力→[体力查询(note)]`、`#原神抽卡记录→[抽卡记录(getLog)]`、`*星铁抽卡记录→[喵喵:抽卡统计(Yzdetail)]`、`#今日素材→[喵喵:角色资料(today)] [角色素材(material)]`。
+  - **隔离环境踩坑(已修)**:沙箱内 `pkill` 杀不掉上轮遗留、已 reparent 到 PID1 的 bot,导致多实例同读输入、命中被回显 N 次。修法=① 采集对命中 `awk '!seen'` **去重**(快照与实例数无关、根上免疫);② harness 整轮在沙箱外跑使内部 kill 生效、跑完不留孤儿。
 
 ### Chapter 1（P1）— keystone:契约层 / Context（当前主线）
 - [x] `1-00` **ADR-001 Cordis/Context POC**(2026-05-31):`.devenv/poc-cordis` 实证 Service/dispose/hook 全通过 → **决定复用 Cordis**(详见 ADR-001)。
