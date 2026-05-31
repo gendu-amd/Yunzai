@@ -18,8 +18,8 @@
 - **已完成(追加)**:`core.hook.emitAsync`(await 异步监听,Yunzai `df88366`);miao 在面板渲染真实点埋 `profile:beforeRender`(miao `6637567`)——**ark 去侵入的官方 seam 就位**(取代覆盖文件/monkey-patch)。baseline `--check` PASS。
 - **已完成(追加)**:退场清单 **A-2**——已迁 8 处(MysInfo/region/dailyNote/payLog/gachaLog/userck×2/bindCookie),分别经 account/gameRegistry/gacha 消费,均验数据一致 + baseline PASS。**⚠️ 全仓复扫纠正**:之前漏 3 处(gsCfg `roleNameToID/roleIdToName` ×2、`NoteUser.forEach`),不能盲迁(换实现会改数据),已记入待办待逐个验证。
 - **✅ A-2 主体完成**:xiaoyao 全部 8 处 genshin 内部 `file://` 依赖均 core 优先 + 带告警回退(genshin 配套 provide:account 扩 checkUidBing/init/bindCookie/forEachUser、新增 gacha;复用 gameRegistry/gameData)。剩:① 静态/动态 import 的物理删除(ADR-004 零命中周期后)② 死分支(`lib/app/*` 缺失)③ 框架 config 访问(非侵入)——均后续。
-- **当前能力地图**:genshin→`account`/`gameRegistry`/`gacha`;miao→`gameData`/`rank` + hook `profile:beforeRender`;框架→`pluginRegistry`/`renderer`/`core.hook.*`。
-- **A-3 决策(2026-05-31)**:框架游戏硬编码分析后,确认 loader 的 `srReg/zzzReg` 不宜指向 genshin gameRegistry(L0→L2 层级倒挂);**正确解=框架自有"游戏前缀注册表"+ 插件注册,并入 Phase D/`1-05` 第二步懒激活**一起做。`_miao_path` 框架→miao 耦合属大件,单独立项。`createMysApi` 布尔兼容不动。
+- **当前能力地图**:genshin→`account`/`gameRegistry`/`gacha`;miao→`gameData`/`rank` + hook `profile:beforeRender`;框架→`pluginRegistry`/`renderer`/`gamePrefix`/`core.hook.*`。
+- **A-3 起步(2026-05-31,Yunzai `ef1c1fe`)**:按"框架自有注册表"正确解落地——`gamePrefix` 注册表(L0,默认 sr/zzz,插件可 register),loader 前缀判定改走它(留 fallback)。**首个派发核心改动**,baseline `--check` PASS 验证零回归(0-00 基线首次实战守住 Phase D)。下一步可在此基础上做"懒激活"(命令前缀命中才激活)。`_miao_path` 耦合、`isSr` setter、`createMysApi` 布尔兼容另议。
 - **退场清单**:A-2 主体✅;A-1(ark)⏸延后PC;A-3(框架 srReg/isSr/_miao_path)⬜未动。
 - **ark(A-1)改判**(2026-05-31 调研结论):ark `init.js:491` 是 miao render 的**近乎整段 fork**,增量字段(`dmgRankData/artisRankData/top1/scoreAndRank/selfRank`)**全部来自 ark 排名服务器(网络)**,且需模板名切换(`-ark`)+ 字段重命名(`hsr_paths`→`path`)。**本环境无法比对数据**(依赖网络排名服务),**单 hook 也不足**(需可改写模板名)。→ **A-1 延后到 PC + 排名服务可达**,届时:① 给 `profile:beforeRender` payload 增加可改写的 `tplName`;② ark 改订阅注入排名;③ 删 render 覆盖 + replaceFile。
 - **下一步候选**:A-2 续(`adapter/mys.js` MysInfo → account port,需扩 port `checkUidBing/init` + 真账号验)/ miao `provide('rank')` / `1-05` 第二步懒激活(改 loader,有护栏)。
@@ -127,7 +127,9 @@
     - [ ] ark `#ark替换文件` + monkey-patch miao → 改 `core.hook.on(...)` 订阅(满足 1-4 后删)
       - **seam 已就位**(2026-05-31,miao `6637567`):miao 在 `ProfileDetail.render` 真实渲染点发布 `profile:beforeRender`(异步,可改写 renderData),正是 ark `init.js:491` 覆盖 render 注入排名的同一点。**待办**:ark 改订阅 → 删 `init.js` 的 render 覆盖 + `replaceFile` 覆盖(需 PC 出图终验后删)。
     - [ ] genshin/miao 内部跨插件直接 import → 收敛到 `core.require()`
-    - [ ] 框架 `lib/` 内 `srReg/isSr/_miao_path` 等游戏硬编码 → 下沉 hook / gameRegistry(满足 1-4 后删)
+    - [~] 框架 `lib/` 内 `srReg/isSr/_miao_path` 等游戏硬编码 → 下沉 hook / gameRegistry(满足 1-4 后删)
+      - ✅ **srReg/zzzReg → 框架自有 `gamePrefix` 注册表**(2026-05-31,Yunzai `ef1c1fe`):loader 前缀归一化改走 `core.gamePrefix.detect`,框架 L0 自有注册表(默认 sr/zzz,正则逐字一致)+ 插件可 register 新游戏(contributes 雏形,新增游戏不改 loader);保留本地正则 fallback。**派发核心改动**,dev 15 例 + baseline `--check` 双验零回归。待:零命中周期后删 loader 本地 srReg/zzzReg。
+      - ⬜ `_miao_path`(框架 render→miao 资源路径耦合)、`isSr/isGs` setter:单独立项(大件/与 Context 重设计相关)。
   - **机制**:旧路径加 `logger.warn('[deprecated] …,请改用 core.require(...)')`;退场清单随每次迁移更新勾选,P4 收敛时清单清空=垫片删尽。
 
 ---
