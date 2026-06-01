@@ -100,6 +100,9 @@
   - `emit`=Waterfall(可改 ctx)、`filter`=Bail(任一 false 否决)、`notify`=Series(纯通知);named tap 便于 tracing。
 - **ADR-003 · 资源/数据层独立版本化** · `已定` · 2026-05-31
   - miao `meta/calc/模板`、术语/卡池等高频数据抽成可独立更新的数据包,与引擎解耦;根治 ark 覆盖/喵喵更新冲突。
+- **ADR-006 · 派发重设计 + 实例化根治(中间件管道 / 单次实例化 / adapter 幂等)** · `评审中` · 2026-06-01
+  - 详见 `docs/dispatch-redesign-design.md`。核心:① 严格区分 **(R) 行为保持重构**(baseline 必须仍 PASS)与 **(S) 语义变更**(改 baseline,单独决策);② R 含:deal 顶层 await+try/catch+tracing、拆中间件管道(原样搬阶段、不改顺序/短路)、loadPlugin 单次实例化、adapter 按 id 幂等注册;③ S(派发"权限拒绝/异常→continue")**默认不做**,需批准 + 重做基线;④ 分期 R-1~R-4,每步 baseline 守。
+  - **前置**:`0-00` 基线已**加厚到 23 条**(别名→游戏路由/边界 `*`/无命中守卫),`--check` 稳定 PASS,作为派发重写的回归网。
 - **ADR-005 · 懒激活设计(manifest 声明触发器 + opt-in + eager 兜底)** · `已定·L-1/L-2/L-3 已实现` · 2026-05-31
   - 详见 `docs/lazy-activation-design.md`。核心:① 根本约束=`rule` 正则在插件代码内,**必须 manifest 声明触发器**才能"命中才加载"(VS Code activationEvents 模型);② **正确性红线**=含 `accept/task/handler/getContext/init` 的插件**强制 eager**(否则功能缺失);③ **opt-in**,未声明 `activation` 的插件零变化;④ manifest 触发器只决定"何时加载",**最终路由仍走插件真实 rule**→ 与 eager 等价;⑤ 分期 L-1~L-5,每步 `baseline --check` 守。
   - **待评审决策点**:opt-in+eager 默认 / 不可懒红线 / manifest.js 零副作用约定 / 实施顺序。通过后从 L-1 写码。
