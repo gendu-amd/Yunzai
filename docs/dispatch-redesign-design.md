@@ -1,6 +1,14 @@
 # 派发重设计 + 实例化根治 · 设计文档（评审稿）
 
-> 状态：**设计评审中（未写码）** · 2026-06-01 · 对应 Phase D 深水区 / ADR-006
+> 状态：**R 全部实现并验证(2026-06-01)** · Phase D 深水区 / ADR-006
+>
+> 实现进度:
+> - ✅ **R-1** 顶层 await + try/catch + 耗时 tracing(`4ba9869`):deal 拆顶层边界 + 本体 _deal;message/notice/request 改 await。
+> - ✅ **R-2** 抽取派发核心 `_mwDispatch`(`e494f4c`):priority/getContext/accept/rule 匹配独立成方法,逐字一致。
+> - ✅ **R-3** 插件单次实例化(`74bcc54`):loadPlugin 删第二个 new p(),能力注册正常。
+> - ✅ **R-4** adapter 按 id 幂等注册(`374559d`):Bot.adapter 同 id 替换不叠加。
+> - ⏸ **S-1**(派发语义"拒绝/异常→continue"):**未做**,需单独批准 + 重做 baseline(会改行为)。
+> - 全部 R 每步 `baseline --check` PASS(23 条);R-3 额外验证能力注册不变。
 > 前置已就绪：`0-00` 回归基线已**加厚到 23 条**(含别名→游戏路由/边界/无命中守卫),`--check` 稳定 PASS——作为本重设计的回归网。
 > 读前提示：本文严格区分两类改动——**(R) 行为保持的结构重构**(baseline 必须仍 PASS)与 **(S) 语义变更**(会改 baseline,需单独决策 + 重做快照)。**默认只做 R;S 仅在你明确批准后单独进行。**
 

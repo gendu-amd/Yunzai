@@ -83,7 +83,8 @@ bash .devenv/baseline.sh                        # 重新生成基线快照(确�
 ## 4b. 续作补记（2026-06-01）
 - **懒激活线程收尾**:L-4 作者指南(`docs/lazy-activation-guide.md`)+ L-5 结论(核心仓 6 插件全含红线、无 lazy-safe 候选)。机制完备 + 文档齐全。
 - **未验证切片盘点(诚实)**:① 所有出图视觉(无 Chromium,留 PC);② bindCookie 写流程/gacha 全流程(同类构造已验,全流程留 PC);③ fallback 旧路径分支(core 常驻不触发,加 `[deprecated]` 当探针);④ baseline 原仅 14 条只覆盖路由。→ **已把 baseline 加厚到 23 条**(别名/边界/无命中),`--check` 稳定 PASS,作为派发重写护栏。
-- **下一步进行中**:**ADR-006 派发重设计**(`docs/dispatch-redesign-design.md`,评审中)→ 评审通过从 R-1(顶层 await+try/catch+tracing)开始。
+- **ADR-006 派发重设计 R 阶段全部完成**(2026-06-01,行为保持、baseline 23 条守):R-1 顶层 await+try/catch+tracing(`4ba9869`)、R-2 派发核心抽成 `_mwDispatch`(`e494f4c`)、R-3 插件单次实例化根治(`74bcc54`)、R-4 adapter 按 id 幂等(`374559d`)。**S-1**(派发语义"拒绝/异常→continue")属行为变更,**未做**,需单独批准 + 重做 baseline。
+- **下一步候选**:S-1(需决策+重做基线)/ PC 终验(出图+ark A-1+退场删除)/ 其余大件(_miao_path 解耦、Context 化更深)。
 
 ## 5. 纪律备忘（延续）
 - 凡行为改动**先有基线**;派发改动必跑 `baseline --check`。

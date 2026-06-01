@@ -43,6 +43,7 @@
 ### Chapter 0（P0）— ⚠️ 已 revert,重新定义
 > 原 `0-01/02/03` 是补丁式脚手架,已全部 revert(见 §0 纠偏)。P0 重新定位为"**只做不可省的地基**":回归基线。派发/错误隔离/生命周期等**结构问题**统一在 keystone(Context 模型)里"由设计解决",不再单独打补丁。
 - [-] `0-01/02/03`(顶层错误边界 / 逐插件隔离 / adapter 幂等)→ **已 revert**(补丁式,不推进架构;正解在 keystone)
+- [x] **P0 结构地基(经 ADR-006 R 阶段正解落地,2026-06-01)**:R-1 顶层 await+try/catch+tracing(`4ba9869`)、R-2 派发核心模块化 `_mwDispatch`(`e494f4c`)、R-3 插件单次实例化根治(`74bcc54`)、R-4 adapter 按 id 幂等根治(`374559d`)。区别于已 revert 的补丁:这些是在加厚基线(23 条)护栏下、行为保持的结构重构。派发语义"拒绝/异常→continue"(S-1)属行为变更,延后单独决策。
 - [x] `0-00` **回归基线**(2026-05-31,本地工具 `.devenv/baseline.sh`,`--check` PASS):14 条命令语料(帮助/状态/版本 + `#`gs/`*`sr/`%`zzz 多游戏前缀 + 抽卡/面板/素材)→ 采集每条命中的 `[plugin(fnc)]` 序列为快照 `.devenv/baseline/dispatch.snapshot`。采集点=loader 在 handler 执行**前**打的 `[开始处理]`,只反映**匹配决策**、与网络/出图无关 → 确定性可复现。`--check` 重跑逐命令 diff,作为**改真实派发/懒激活(Phase D)前后的护栏**。harness 在仓外(零污染,同 `verify.sh`)。
   - 快照样例:`#帮助→[喵喵:喵喵帮助(help)]`、`#状态→[状态统计(status)]`、`#体力/*体力/%体力→[体力查询(note)]`、`#原神抽卡记录→[抽卡记录(getLog)]`、`*星铁抽卡记录→[喵喵:抽卡统计(Yzdetail)]`、`#今日素材→[喵喵:角色资料(today)] [角色素材(material)]`。
   - **隔离环境踩坑(已修)**:沙箱内 `pkill` 杀不掉上轮遗留、已 reparent 到 PID1 的 bot,导致多实例同读输入、命中被回显 N 次。修法=① 采集对命中 `awk '!seen'` **去重**(快照与实例数无关、根上免疫);② harness 整轮在沙箱外跑使内部 kill 生效、跑完不留孤儿。
@@ -100,7 +101,8 @@
   - `emit`=Waterfall(可改 ctx)、`filter`=Bail(任一 false 否决)、`notify`=Series(纯通知);named tap 便于 tracing。
 - **ADR-003 · 资源/数据层独立版本化** · `已定` · 2026-05-31
   - miao `meta/calc/模板`、术语/卡池等高频数据抽成可独立更新的数据包,与引擎解耦;根治 ark 覆盖/喵喵更新冲突。
-- **ADR-006 · 派发重设计 + 实例化根治(中间件管道 / 单次实例化 / adapter 幂等)** · `评审中` · 2026-06-01
+- **ADR-006 · 派发重设计 + 实例化根治** · `已定·R-1~R-4 已实现(S 未做)` · 2026-06-01
+  - ✅ R-1 顶层 await+try/catch+tracing(`4ba9869`)/ R-2 抽取派发核心 _mwDispatch(`e494f4c`)/ R-3 插件单次实例化(`74bcc54`)/ R-4 adapter 按 id 幂等(`374559d`)。每步 baseline `--check` PASS(23 条);R-3 验能力注册不变。⏸ S-1(派发语义改 continue)未做,需单独批准+重做基线。
   - 详见 `docs/dispatch-redesign-design.md`。核心:① 严格区分 **(R) 行为保持重构**(baseline 必须仍 PASS)与 **(S) 语义变更**(改 baseline,单独决策);② R 含:deal 顶层 await+try/catch+tracing、拆中间件管道(原样搬阶段、不改顺序/短路)、loadPlugin 单次实例化、adapter 按 id 幂等注册;③ S(派发"权限拒绝/异常→continue")**默认不做**,需批准 + 重做基线;④ 分期 R-1~R-4,每步 baseline 守。
   - **前置**:`0-00` 基线已**加厚到 23 条**(别名→游戏路由/边界 `*`/无命中守卫),`--check` 稳定 PASS,作为派发重写的回归网。
 - **ADR-005 · 懒激活设计(manifest 声明触发器 + opt-in + eager 兜底)** · `已定·L-1/L-2/L-3 已实现` · 2026-05-31
