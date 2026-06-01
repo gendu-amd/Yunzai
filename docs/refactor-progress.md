@@ -62,7 +62,8 @@
   - L1 宿主内建 `pluginRegistry`(`lib/contracts/pluginRegistry.js`):`register/get/list/names/providersOf/consumersOf/hookDeclarers/checkRequires/validate`;经 `core.provide('pluginRegistry')` 暴露 + 别名 `core.manifest`;在插件加载前就绪。
   - genshin 声明首份 `manifest.js`:`provides=[account, gameRegistry]`、`type=data-provider`、`guoba=true`;dev 实测 `providersOf(account)=[genshin]`、`checkRequires={}`。
   - **纯加层、不触碰 loader/派发** → `baseline --check` PASS(零回归)。
-  - **第二步 ✅ L-1/L-2/L-3(2026-05-31,Yunzai `b2e589e`)**:懒激活机制落地——manifest.activation 触发器→懒占位→命中 import→eager 兜底;试点 `_lazytest` 端到端验证(懒待命/命中加载一次/不重复/路由正确)、baseline `--check` PASS、试点已删。红线改"作者声明 activation 自负懒安全 + 框架事后告警"(无法加载前检测,见 `docs/lazy-activation-design.md`)。待 L-4(推广文档)/L-5(核心插件 opt-in)。
+  - **第二步 ✅ L-1/L-2/L-3/L-4(2026-06-01)**:懒激活机制落地(`b2e589e`)——manifest.activation 触发器→懒占位→命中 import→eager 兜底;试点 `_lazytest` 端到端验证、baseline PASS、试点已删。红线改"作者声明 + 框架事后告警"。**L-4 作者指南** `docs/lazy-activation-guide.md`。
+  - **L-5 结论(2026-06-01,客观限制)**:复扫核心仓 6 个目录型插件(genshin/miao/ark/Guoba/xiaoyao/TRSS)——**全部含红线**(启动期 provide 能力 / `Bot.*` 打补丁 / task / accept),**均不适合懒激活**。故 L-5 暂无核心候选;机制服务于未来小型纯命令插件 + 第三方生态 opt-in。**懒激活线程到此告一段落(机制完备 + 文档齐全)**。
 - [ ] `1-06` 协议文档 + 版本化
 
 ### Chapter 2（P2）· 核心面向契约
