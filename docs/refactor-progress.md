@@ -92,7 +92,11 @@
 ## 2. 决策记录（ADR-lite）
 > 格式:ADR-编号 · 标题 · 状态(提议/已定/搁置) · 日期 · 决定 + 理由
 
-- **ADR-001 · 契约层基座:复用 Cordis vs 自研** · `已定:复用 Cordis` · 2026-05-31
+- **ADR-008 · 去 cordis,core 改轻量自管** · `已定` · 2026-06-02 · (**取代 ADR-001 的复用 cordis 决策**)
+  - **复盘**:ADR-001 选 cordis 是为其 Service/dispose/scope;但实际落地后,这些独有能力**生产代码从未使用**(grep 证实仅 contracts/index.js 自身定义 scope/serial,无调用方),cordis 实际只当 Map+EventEmitter。属**过度设计**。
+  - **决定**:core 改 ~40 行自管实现(能力=Map,hook=简易事件总线),删 cordis 依赖 + `Bot.ctx`。`core.*` API(provide/require/has/list + hook.on/emit/emitAsync/veto)**完全不变**,所有 provider/consumer 零改动(Yunzai `97219ed`)。验证:7 能力全装配 + hook 语义一致 + baseline PASS。
+  - **教训**:契约层"实现可替换"的设计(ADR-001 第 5 条)正确——正因消费方只依赖 `core.*`,换底座才能零成本。但选型应**按实际用到的能力**,不为"将来可能用"背重依赖(YAGNI)。
+- **ADR-001 · 契约层基座:复用 Cordis vs 自研** · `已定→被 ADR-008 取代(改自管)` · 2026-05-31
   - **POC(`.devenv/poc-cordis`,cordis 4.0.0-rc.6)实证**:① Service `provide/inject` 承载 AccountPort ✅;② Context `dispose` 可逆——卸载 provider 后 `ctx.account` 自动消失 ✅(根治双实例化/热更新副作用);③ HookBus:`emit`+引用改写可注入(ark 非侵入扩展)、`bail` 可否决 ✅。
   - **决定**:L1 契约层构建在 Cordis 之上,不自研 Registry/HookBus/lifecycle。
   - **版本决定(1-00b)**:用 **cordis `3.18.1` 稳定版**(不押 4.0-RC)。3.18.1 实测同样满足 Service/provide/dispose/emit-引用改写/bail(POC 复跑通过);成熟 68 版、Koishi 时代验证。锁 `~3.18`。
@@ -107,7 +111,8 @@
   - **验证**:5 能力全自动装配(account/gameRegistry/gacha←genshin、gameData/rank←miao),`has` 全 true、`getCharacter(胡桃).id=10000046`、`gameRegistry.term(sr,weapon)=光锥`、`checkRequires={}`、`names=[yunzai-core,genshin,miao]`;别名→游戏路由不变;baseline `--check` PASS。
   - **可拓展性达成**:加能力/游戏前缀/hook = 改插件 manifest 一处,框架自动接线,**无需改框架、无需写注册样板**。
 - **ADR-006 · 派发重设计 + 实例化根治** · `已定·R-1~R-4 已实现(S 未做)` · 2026-06-01
-  - ✅ R-1 顶层 await+try/catch+tracing(`4ba9869`)/ R-2 抽取派发核心 _mwDispatch(`e494f4c`)/ R-3 插件单次实例化(`74bcc54`)/ R-4 adapter 按 id 幂等(`374559d`)。每步 baseline `--check` PASS(23 条);R-3 验能力注册不变。⏸ S-1(派发语义改 continue)未做,需单独批准+重做基线。
+  - ✅ R-1 顶层 await+try/catch+tracing(`4ba9869`)/ R-2 抽取派发核心 _mwDispatch(`e494f4c`)/ R-3 插件单次实例化(`74bcc54`)/ R-4 adapter 按 id 幂等(`374559d`)。每步 baseline `--check` PASS(23 条);R-3 验能力注册不变。
+  - **[-] S-1(派发语义 首匹配 return→拒绝/异常 continue)放弃(2026-06-02)**:无真实需求(生态命令正则基本独占,无"同命令不同权限抢")+ 有"同命令多插件双响应"风险;真正痛点(未 await/unhandled rejection)已由 R-1 错误边界解决。如将来遇具体"命令被高优先级权限插件挡住"再定向修,不全局改派发语义。
   - 详见 `docs/dispatch-redesign-design.md`。核心:① 严格区分 **(R) 行为保持重构**(baseline 必须仍 PASS)与 **(S) 语义变更**(改 baseline,单独决策);② R 含:deal 顶层 await+try/catch+tracing、拆中间件管道(原样搬阶段、不改顺序/短路)、loadPlugin 单次实例化、adapter 按 id 幂等注册;③ S(派发"权限拒绝/异常→continue")**默认不做**,需批准 + 重做基线;④ 分期 R-1~R-4,每步 baseline 守。
   - **前置**:`0-00` 基线已**加厚到 23 条**(别名→游戏路由/边界 `*`/无命中守卫),`--check` 稳定 PASS,作为派发重写的回归网。
 - **ADR-005 · 懒激活设计(manifest 声明触发器 + opt-in + eager 兜底)** · `已定·L-1/L-2/L-3 已实现` · 2026-05-31
