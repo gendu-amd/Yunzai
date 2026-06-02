@@ -9,7 +9,7 @@
 📄 **`target-architecture.md`** — 统一架构的"宪法"。
 - 目标分层(L0 运行时 / L1 契约 / L2 提供者 / L3 功能 / L4 扩展)、四条硬约束(独立·解耦·紧密·非侵入)。
 - **官方扩展接口规范**:CapabilityRegistry/Service、HookBus、AccountPort/GameRegistry/GameDataProvider/RankProvider/Renderer、PluginManifest。
-- §8 借鉴 MAA/arkime;§9 借鉴 Koishi-Cordis/NoneBot/VSCode/tapable + **收敛决定**(评估直接复用 Cordis 作基座)。
+- §8 借鉴 MAA/arkime;§9 借鉴 Koishi-Cordis/NoneBot/VSCode/tapable + **收敛决定**(原评估复用 Cordis 作基座,后经 ADR-008 改为轻量自管、去 cordis 依赖)。
 
 ## 2. 当前架构（As-Is）— 在哪
 📄 **`architecture-review.md`** — 现状诊断。
