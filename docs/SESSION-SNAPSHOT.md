@@ -89,7 +89,12 @@ bash .devenv/baseline.sh                        # 重新生成基线快照(确�
 ## 4c. 续作补记（2026-06-02）· ADR-007 统一装配完成
 - **manifest 统一装配落地**:provides 改 `{能力名:importer}`、框架 `loader.wireManifests()` 自动 `core.provide`;genshin(`6836120`)+miao(`36380ce`)删全部手写 `*Port.js` provide 样板;gamePrefix sr/zzz 从框架硬编码移到 genshin `contributes`(`a8f1d74`/`18b85ba`)。**单一声明源=manifest,加能力/游戏=改 manifest 一处,框架自动接线**。5 能力全自动装配验证通过、checkRequires={}、baseline PASS。
 - **PC 验证清单**:见 `docs/PC-VERIFY-CHECKLIST.md`(出图/真账号端到端/推送各仓)。
-- **本地能做的已做完**;剩 S-1(行为变更,待决策)/ A-1 ark(需 PC+排名服务)/ 退场真删 / `_miao_path` 解耦(大件)。
+- **本地能做的已做完**;剩 A-1 ark(需 PC+排名服务)/ 退场真删 / `_miao_path` 解耦(大件)。S-1 已**放弃**(无真实需求+双响应风险)。
+
+## 4d. 简化/纠偏（2026-06-02）· 去过度设计
+- **ADR-008 去 cordis**(`97219ed`):core 改 ~40 行自管(Map+事件总线),cordis 独有能力生产从未用 → 删依赖,API 不变、零改动。
+- **account/gacha port 顶部 import**(genshin `d636057`):去逐方法 `await import` 冗余(ADR-007 后无循环之虞),薄封装一行化,与其它 port 一致。
+- **刻意保留(非不优雅,有理由)**:① 契约层 pluginRegistry/gamePrefix/renderer 分文件——单一职责清晰,合并反而混;② loader 的 srReg/zzzReg 与 genshin contributes 重复——作 core 缺失时 fallback,按 ADR-004 零命中周期后再删;③ manifest 暂不声明"命令"——属全生态改造、风险大,非简化。
 
 ## 5. 纪律备忘（延续）
 - 凡行为改动**先有基线**;派发改动必跑 `baseline --check`。
