@@ -101,6 +101,11 @@
   - `emit`=Waterfall(可改 ctx)、`filter`=Bail(任一 false 否决)、`notify`=Series(纯通知);named tap 便于 tracing。
 - **ADR-003 · 资源/数据层独立版本化** · `已定` · 2026-05-31
   - miao `meta/calc/模板`、术语/卡池等高频数据抽成可独立更新的数据包,与引擎解耦;根治 ark 覆盖/喵喵更新冲突。
+- **ADR-007 · manifest 统一装配(单一声明源,框架自动接线)** · `已定·已实现` · 2026-06-02
+  - **动机**:之前 provides/hook/gamePrefix/激活 是分散机制 + 每插件手写 `*Port.js`+`Bot.core.provide` 样板。统一为:**manifest = 唯一声明源**,框架 `loader.wireManifests()` 据声明自动接线。
+  - **实现**:① `provides:{能力名:()=>import(...)}` → 框架自动 `core.provide`(genshin `6836120`、miao `36380ce`,删全部手写 provide 样板);② `contributes.gamePrefix:[{game,test,cmd}]` → 框架自动注册(sr/zzz 从框架硬编码 seed 移到 genshin manifest,`a8f1d74`/`18b85ba`,层级正确);③ pluginRegistry 兼容 provides 数组/对象;④ 框架 `5d4bd00`。向后兼容(数组式 provides 不自动装配,自注册照旧)。
+  - **验证**:5 能力全自动装配(account/gameRegistry/gacha←genshin、gameData/rank←miao),`has` 全 true、`getCharacter(胡桃).id=10000046`、`gameRegistry.term(sr,weapon)=光锥`、`checkRequires={}`、`names=[yunzai-core,genshin,miao]`;别名→游戏路由不变;baseline `--check` PASS。
+  - **可拓展性达成**:加能力/游戏前缀/hook = 改插件 manifest 一处,框架自动接线,**无需改框架、无需写注册样板**。
 - **ADR-006 · 派发重设计 + 实例化根治** · `已定·R-1~R-4 已实现(S 未做)` · 2026-06-01
   - ✅ R-1 顶层 await+try/catch+tracing(`4ba9869`)/ R-2 抽取派发核心 _mwDispatch(`e494f4c`)/ R-3 插件单次实例化(`74bcc54`)/ R-4 adapter 按 id 幂等(`374559d`)。每步 baseline `--check` PASS(23 条);R-3 验能力注册不变。⏸ S-1(派发语义改 continue)未做,需单独批准+重做基线。
   - 详见 `docs/dispatch-redesign-design.md`。核心:① 严格区分 **(R) 行为保持重构**(baseline 必须仍 PASS)与 **(S) 语义变更**(改 baseline,单独决策);② R 含:deal 顶层 await+try/catch+tracing、拆中间件管道(原样搬阶段、不改顺序/短路)、loadPlugin 单次实例化、adapter 按 id 幂等注册;③ S(派发"权限拒绝/异常→continue")**默认不做**,需批准 + 重做基线;④ 分期 R-1~R-4,每步 baseline 守。

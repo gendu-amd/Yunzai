@@ -86,6 +86,11 @@ bash .devenv/baseline.sh                        # 重新生成基线快照(确�
 - **ADR-006 派发重设计 R 阶段全部完成**(2026-06-01,行为保持、baseline 23 条守):R-1 顶层 await+try/catch+tracing(`4ba9869`)、R-2 派发核心抽成 `_mwDispatch`(`e494f4c`)、R-3 插件单次实例化根治(`74bcc54`)、R-4 adapter 按 id 幂等(`374559d`)。**S-1**(派发语义"拒绝/异常→continue")属行为变更,**未做**,需单独批准 + 重做 baseline。
 - **下一步候选**:S-1(需决策+重做基线)/ PC 终验(出图+ark A-1+退场删除)/ 其余大件(_miao_path 解耦、Context 化更深)。
 
+## 4c. 续作补记（2026-06-02）· ADR-007 统一装配完成
+- **manifest 统一装配落地**:provides 改 `{能力名:importer}`、框架 `loader.wireManifests()` 自动 `core.provide`;genshin(`6836120`)+miao(`36380ce`)删全部手写 `*Port.js` provide 样板;gamePrefix sr/zzz 从框架硬编码移到 genshin `contributes`(`a8f1d74`/`18b85ba`)。**单一声明源=manifest,加能力/游戏=改 manifest 一处,框架自动接线**。5 能力全自动装配验证通过、checkRequires={}、baseline PASS。
+- **PC 验证清单**:见 `docs/PC-VERIFY-CHECKLIST.md`(出图/真账号端到端/推送各仓)。
+- **本地能做的已做完**;剩 S-1(行为变更,待决策)/ A-1 ark(需 PC+排名服务)/ 退场真删 / `_miao_path` 解耦(大件)。
+
 ## 5. 纪律备忘（延续）
 - 凡行为改动**先有基线**;派发改动必跑 `baseline --check`。
 - 重构**不是加冗余层**：能力必须替代真实旧路径,旧路径退场要真删（ADR-004）。
