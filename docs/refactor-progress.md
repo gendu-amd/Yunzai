@@ -7,6 +7,14 @@
 
 ---
 
+## 0b. 「统一管理」arc（2026-06-03，功能等价、无需出图）
+> 原则:该统一的统统收敛到 SSOT(account / games.js)。全程数据等价 dev 验 + baseline PASS。
+- ✅ **账号/CK 统一**:`account.getBindUidList`(genshin NoteUser SSOT);xiaoyao `#全部体力`(genshin `7cfae06`+xiaoyao `aca494f`)、批量签到 `signTask`(xiaoyao `6665194`)均改走 account,不再读自有 `data/MysCookie/*.yaml` → 根治"已绑却提示未绑定";xiaoyao 补 `manifest.js` 入契约(checkRequires={})。
+- ✅ **region 表消重**:`mysApi.getServer` → `games.getRegion`(genshin `8d5da5a`,16 例验)。
+- ✅ **biz 表消重**:`MysUser.getGameKey` → `games.gameKeyByBiz`(genshin `244674a`,9 例验)。
+- ✅ **adapter 去静态 import**:`adapter/mys.js` 顶层 import MysInfo → fallback 动态(xiaoyao `6665194`)。
+- **剩余(未盲做,理由)**:① display 层 `isSr?文案A:文案B`(gachaLog/ledger 等,高量低值,可后续走 `gameRegistry.term` 清);② dmg/calc 的 gs/sr 公式分叉(**非配置、是不同逻辑**,不属"重复",不动);③ 框架 `runtime.js` 去 genshin 硬 import + `_miao_path`(render 全路径,风险高,需 PC 出图终验);④ ark 去覆盖(订阅 `profile:beforeRender`,排名数据依赖 ark 服务器)。这些需 PC/出图 或属高量低值,留作 focused 后续。
+
 ## 0. 当前焦点
 - **纠偏(2026-05-31)**:`chapter0-01/02/03` 经自查判定为**给旧结构打补丁的脚手架**(顶层 try/catch 吞错、加固将被替换的派发循环、只修 wsf 没修 Bot.adapter 重复),已 **`git reset --hard 78758a6` 全部 revert**(reflog 可找回)。
 - **新纪律**:不再"碰软躲硬";严格按"目标+计划"从**地基(keystone)**做起;凡行为改动必先有**回归基线**;错误**浮现/计入待修**,不许吞。
