@@ -17,11 +17,12 @@
 | `gameData`(角色/武器/圣遗物/画像) | miao | e0ef478 |
 | `rank`(群排行) | miao | 60f68bd |
 | `renderer`(带文本降级) | 框架 | c29303e |
-| `pluginRegistry`(manifest 注册表) | 框架 | 30794c2 |
 | `gamePrefix`(游戏前缀注册表) | 框架 | ef1c1fe |
-| `core.hook.{on,emit,emitAsync,veto}` + `profile:beforeRender` hook | 框架/miao | df88366,6637567 |
+| `core.hook.{on,emit}` + `profile:beforeRender` hook | 框架/miao | df88366,6637567 |
 
-`checkRequires` 供需闭环已归零（account/renderer 均被满足）。
+> ⚠️ **已纠正(2026-06-03)**:原表列的 `pluginRegistry`、manifest、`core.hook` 的 `emitAsync`/`veto`
+> **均已删除**(见 `codebase-audit-2026-06.md §6`)。hook 触发收敛为单个 async `emit`;
+> `renderer` 能力当前因 `global.Renderer` 绑定错误**实际不可用**(同上 §2.E)。本快照其余条目为历史记录。
 
 ### B. 退场清单 A-2：xiaoyao 去 genshin `file://` 侵入（主体完成）
 全部 **8 处** genshin 内部 `file://` 依赖改为「`core.require()` 优先 + 带 `[deprecated]` 告警回退」：

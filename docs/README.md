@@ -12,9 +12,13 @@
 - §8 借鉴 MAA/arkime;§9 借鉴 Koishi-Cordis/NoneBot/VSCode/tapable + **收敛决定**(原评估复用 Cordis 作基座,后经 ADR-008 改为轻量自管、去 cordis 依赖)。
 
 ## 2. 当前架构（As-Is）— 在哪
-📄 **`architecture-review.md`** — 现状诊断。
-- 各 repo(框架/genshin/miao/xiaoyao/TRSS/Guoba/ark)定位·职责·脆弱点(带 file:line)。
-- §3 跨仓"为什么脆弱"8 根因;§4 P0–P3 概览。
+📄 **`codebase-audit-2026-06.md`** ⭐ — **权威现状基准**(2026-06 三轮 14 维度深挖)。
+- 框架真实结构(已核验) + 全局问题图谱 A–U(严重度 + file:line + ✅核验标记)。
+- 5 个关键缺陷人工核验;修正后 P-1~P6 方案;**文档漂移清单**(本目录其它文档与现盘不符处)。
+- **动工前以本文对齐"到底哪里有问题",优先于下面的旧诊断/愿景。**
+
+📄 **`architecture-review.md`** — 早期现状诊断(部分已被上文取代)。
+- 各 repo 定位·职责·脆弱点(带 file:line);§3 跨仓 8 根因;§4 P0–P3 概览。
 
 ## 3. 如何重构优化（计划/路线）— 怎么去
 📄 **`unified-refactor-plan.md`** — 生态调研 + 功能流程 + 目标原则 + **P0–P5 路线**。
@@ -35,7 +39,7 @@
 ---
 
 ## 建议阅读顺序
-1. 新人/对齐方向:`architecture-review`(现状) → `target-architecture`(目标) → `unified-refactor-plan`(路线)。
+1. 新人/对齐方向:`codebase-audit-2026-06`(现状·权威) → `target-architecture`(目标) → `unified-refactor-plan`(路线)。
 2. 开始动手:打开 `refactor-progress.md`,认领任务、记录进度与调试。
 3. 碰到多游戏/SR 抽卡问题:查 `multi-game-refactor.md`。
 4. 要上线到群里:查 `wechat-deploy.md`。

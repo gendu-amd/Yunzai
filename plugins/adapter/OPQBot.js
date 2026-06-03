@@ -21,7 +21,7 @@ Bot.adapter.push(
       const timeout = setTimeout(() => {
         cache.reject(Bot.makeError("请求超时", request, { timeout: this.timeout }))
         Bot.makeLog("error", ["请求超时", request], id)
-        ws.terminate()
+        Bot[id]?.ws?.terminate?.()
       }, this.timeout)
 
       return cache.promise

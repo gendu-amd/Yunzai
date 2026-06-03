@@ -495,8 +495,9 @@ Bot.adapter.push(
 
     makeRequest(data) {
       data.post_type = data.type
-      if (data.group_id) data.notice_type = "group"
-      else data.notice_type = "friend"
+      // 请求事件应设 request_type（下方 em 用的是它）；旧代码误设 notice_type 致 request.undefined.*
+      if (data.group_id) data.request_type = "group"
+      else data.request_type = "friend"
 
       switch (data.detail_type) {
         case "wx.friend_request":
