@@ -7,6 +7,14 @@
 
 ---
 
+## 0a. 「砍过度设计」反思 arc（2026-06-03）
+> 反思:把窄问题(插件别脆/好管理)做成了通用扩展框架,过度设计。砍掉框架味、留最小有效集。
+- **删懒激活整套**(ADR-005 作废,Yunzai `ef4737e`):复扫确认核心仓无插件满足红线、纯负担零收益。删 loader 的 readActivation/registerLazy/activateLazy + 文档。
+- **删 manifest 自动装配反射**(ADR-007 作废):wireManifests + pluginRegistry + core.manifest + 框架内建 manifest 全删;provider 改回**在自己 index/port 直接 `core.provide`**(简单显式)。gamePrefix 由 genshin 在 index 直接 register。删各仓 manifest.js。
+- **保留的最小有效集**:`core.{provide,require,has,list,hook}` + `renderer` + `gamePrefix` + games.js SSOT + ck 统一。`core.hook`(ark 需 pub/sub)、`provide/require`(跨插件无 node_modules + 缺失降级)是真需要,保留。
+- 验证:7 能力自注册全在、gamePrefix(崩铁体力→sr)、baseline `--check` PASS。各仓 commit:genshin `e48a935`/miao `daa1e68`/xiaoyao `dcbdfe1`。
+- **教训**:选型按"问题实际需要",别为"将来可能/优雅"建通用框架(继 ADR-008 去 cordis 之后,又一次 YAGNI 纠偏)。
+
 ## 0b. 「统一管理」arc（2026-06-03，功能等价、无需出图）
 > 原则:该统一的统统收敛到 SSOT(account / games.js)。全程数据等价 dev 验 + baseline PASS。
 - ✅ **账号/CK 统一**:`account.getBindUidList`(genshin NoteUser SSOT);xiaoyao `#全部体力`(genshin `7cfae06`+xiaoyao `aca494f`)、批量签到 `signTask`(xiaoyao `6665194`)均改走 account,不再读自有 `data/MysCookie/*.yaml` → 根治"已绑却提示未绑定";xiaoyao 补 `manifest.js` 入契约(checkRequires={})。
