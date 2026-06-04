@@ -86,7 +86,7 @@
 |---|---|---|
 | **StarRail-plugin** | ⚠️ cookie 已统一,但 UID/抽卡/device **侧车三轨** + 命令抢占 | 接入需评估:`*体力` 抢 genshin/xiaoyao(可调 priority 或只留一家);抽卡数据不互通(接受或后续对接) |
 | **yenai-plugin** | ✅ 可接入(群管/状态),但**配置面要纳入运维统一** | 明确"框架 autoFriend/checkBlack" vs "椰奶 通知/blackQQ/验证/违禁词"四条独立开关;`monitor.open` 按需关 |
-| **WeChat-Plugin** | ⛔ 不接入 | 用 ComWeChat |
+| **WeChat-Plugin** | ⛔ **不接入(已从 dev.sh 移除)** | 微信走 **ComWeChat**:本仓 `/ComWeChat` 口已就绪,在 Windows 跑 ComWeChatBotClient(锁微信 3.7.0.30)反连 `ws://本机IP:2536/ComWeChat`;步骤见 `wechat-deploy.md §7` |
 | **ZZZ-Plugin** | 已接入 | 面板走 Enka(`%更新展柜面板`)或 `%绑定设备` 避 10041 |
 | **Atlas** | 已接入 | 无需统一 |
 
@@ -104,3 +104,4 @@
 
 ## 变更记录
 - 2026-06-04:初版 + 阶段1/2 完成(WeChat/StarRail/yenai 代码审查;ZZZ/Atlas 补充)。给出接入方案与反思。恢复被误删的 `lib/plugins/config.js`。
+- 2026-06-04(决策):**采纳 StarRail-plugin**(取其模拟宇宙/忘却之庭/星琼月历/强度榜等 miao/xiaoyao 无的功能;`*体力` 会被它接管、面板默认仍 miao,冲突可控)+ **yenai-plugin**(群管/状态);**WeChat-Plugin 不采纳并从 dev.sh 移除**,微信统一走 **ComWeChat** 协议端。dev.sh 现纳管:genshin/miao/TRSS/Guoba/xiaoyao/ark/ZZZ/StarRail/yenai。
