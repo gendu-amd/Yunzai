@@ -28,6 +28,8 @@ REPOS=(
   "plugins/Guoba-Plugin|https://github.com/guoba-yunzai/guoba-plugin.git|https://github.com/gendu-amd/guoba-plugin.git|master"
   "plugins/xiaoyao-cvs-plugin|https://github.com/Ctrlcvs/xiaoyao-cvs-plugin.git|https://github.com/gendu-amd/xiaoyao-cvs-plugin.git|master"
   "plugins/ark-plugin|https://github.com/NotIvny/ark-plugin.git|https://github.com/gendu-amd/ark-plugin.git|main"
+  # 绝区零功能插件(角色面板/抽卡分析等;抽卡链接依赖逍遥插件)。第三方"仅使用",未自建 fork → fork=upstream。
+  "plugins/ZZZ-Plugin|https://github.com/ZZZure/ZZZ-Plugin.git|https://github.com/ZZZure/ZZZ-Plugin.git|main"
 )
 
 # ── colors (auto-disabled when not a TTY) ──────────────────────────────────────
@@ -230,6 +232,35 @@ cmd_status() {
   echo ""
 }
 
+# ── commits (read-only: latest commit per repo) ────────────────────────────────
+_commits_one() {
+  local rel="$1" upstream_url="$2" fork_url="$3" default_branch="$4" dir="$5" label="$6"
+  (
+    cd "$dir" || exit 1
+    local cur; cur="$(git branch --show-current 2>/dev/null)"
+    local line; line="$(git log -1 --format='%h  %cd  %s' --date=format:'%Y-%m-%d %H:%M' 2>/dev/null)"
+    if [[ -z "$line" ]]; then
+      echo "  ${C_DIM}(no commits)${C_RESET}"
+    else
+      echo "  ${C_DIM}[$cur]${C_RESET} ${C_GREEN}$line${C_RESET}"
+    fi
+    # 本地相对 origin 的领先/落后(不联网,基于已 fetch 的 ref;无则跳过)
+    local up; up="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+    if [[ -n "$up" ]]; then
+      local ahead behind
+      ahead="$(git rev-list --count "$up..HEAD" 2>/dev/null || echo 0)"
+      behind="$(git rev-list --count "HEAD..$up" 2>/dev/null || echo 0)"
+      [[ "$ahead" -gt 0 ]] && echo "  ${C_YELLOW}↑$ahead 未推送${C_RESET}"
+      [[ "$behind" -gt 0 ]] && echo "  ${C_YELLOW}↓$behind 未拉取${C_RESET}"
+    fi
+  )
+}
+cmd_commits() {
+  echo "=== 各仓最新提交(本体 + 插件) ==="
+  for_each_repo _commits_one "${1:-}"
+  echo ""
+}
+
 # ── sync ───────────────────────────────────────────────────────────────────────
 _sync_one() {
   local rel="$1" upstream_url="$2" fork_url="$3" default_branch="$4" dir="$5" label="$6"
@@ -364,6 +395,7 @@ Commands:
   clone  [repo]              Clone plugins from your forks (parallel, fork default branch)
   setup  [repo]              Configure upstream + origin remotes
   status [repo] [--fetch]    Show branch + local changes. --fetch also compares upstream
+  commits [repo]             Show latest commit of main + each plugin (+ ahead/behind origin)
   diff   [repo]              Show staged/unstaged diff stat per repo (read-only)
   sync   [repo]              Merge upstream default branch into current branch
   commit "<msg>" [repo|all]  Stage all (-A) + commit dirty repos with one message
@@ -397,6 +429,7 @@ case "$cmd" in
   clone)  cmd_clone  "${1:-}" ;;
   setup)  cmd_setup  "${1:-}" ;;
   status) cmd_status "$@" ;;
+  commits|commit-log|log) cmd_commits "${1:-}" ;;
   diff)   cmd_diff   "${1:-}" ;;
   sync)   cmd_sync   "${1:-}" ;;
   commit) cmd_commit "${1:-}" "${2:-}" ;;
