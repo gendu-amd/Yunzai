@@ -243,14 +243,13 @@ _commits_one() {
     else
       echo "  ${C_DIM}[$cur]${C_RESET} ${C_GREEN}$line${C_RESET}"
     fi
-    # 本地相对 origin 的领先/落后(不联网,基于已 fetch 的 ref;无则跳过)
-    local up; up="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
-    if [[ -n "$up" ]]; then
+    # 相对你的 fork(origin/当前分支)的领先/落后,基于本地缓存 ref(不联网;准确值用 status --fetch)
+    if git rev-parse --verify --quiet "origin/$cur" >/dev/null 2>&1; then
       local ahead behind
-      ahead="$(git rev-list --count "$up..HEAD" 2>/dev/null || echo 0)"
-      behind="$(git rev-list --count "HEAD..$up" 2>/dev/null || echo 0)"
-      [[ "$ahead" -gt 0 ]] && echo "  ${C_YELLOW}↑$ahead 未推送${C_RESET}"
-      [[ "$behind" -gt 0 ]] && echo "  ${C_YELLOW}↓$behind 未拉取${C_RESET}"
+      ahead="$(git rev-list --count "origin/$cur..HEAD" 2>/dev/null || echo 0)"
+      behind="$(git rev-list --count "HEAD..origin/$cur" 2>/dev/null || echo 0)"
+      [[ "$ahead" -gt 0 ]] && echo "  ${C_YELLOW}↑$ahead 未推送 origin${C_RESET}"
+      [[ "$behind" -gt 0 ]] && echo "  ${C_YELLOW}↓$behind 未拉取 origin${C_RESET}"
     fi
   )
 }
