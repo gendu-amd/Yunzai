@@ -28,8 +28,7 @@ REPOS=(
   "plugins/Guoba-Plugin|https://github.com/guoba-yunzai/guoba-plugin.git|https://github.com/gendu-amd/guoba-plugin.git|master"
   "plugins/xiaoyao-cvs-plugin|https://github.com/Ctrlcvs/xiaoyao-cvs-plugin.git|https://github.com/gendu-amd/xiaoyao-cvs-plugin.git|master"
   "plugins/ark-plugin|https://github.com/NotIvny/ark-plugin.git|https://github.com/gendu-amd/ark-plugin.git|main"
-  # 绝区零功能插件(角色面板/抽卡分析等;抽卡链接依赖逍遥插件)。第三方"仅使用",未自建 fork → fork=upstream。
-  "plugins/ZZZ-Plugin|https://github.com/ZZZure/ZZZ-Plugin.git|https://github.com/ZZZure/ZZZ-Plugin.git|main"
+  "plugins/ZZZ-Plugin|https://github.com/ZZZure/ZZZ-Plugin.git|https://github.com/gendu-amd/ZZZ-Plugin.git|main"
 )
 
 # ── colors (auto-disabled when not a TTY) ──────────────────────────────────────
