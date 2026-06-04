@@ -201,15 +201,29 @@ _status_one() {
     fi
 
     [[ "$STATUS_FETCH" != "1" ]] && exit 0
-    git remote get-url upstream >/dev/null 2>&1 || { echo "  ${C_DIM}(no upstream remote)${C_RESET}"; exit 0; }
+    local cur; cur="$(git branch --show-current 2>/dev/null)"
 
+    # origin(你的 fork)= push/pull 目标 —— 推拉状态看这里
+    if git remote get-url origin >/dev/null 2>&1; then
+      if gitnet fetch origin --quiet 2>/dev/null; then
+        local oa ob
+        oa="$(git rev-list --count "origin/$cur..HEAD" 2>/dev/null || echo 0)"
+        ob="$(git rev-list --count "HEAD..origin/$cur" 2>/dev/null || echo 0)"
+        if [[ "$oa" -gt 0 ]]; then echo "  ${C_YELLOW}↑ $oa 待 push${C_RESET} → origin/$cur"; fi
+        if [[ "$ob" -gt 0 ]]; then echo "  ${C_YELLOW}↓ $ob 待 pull${C_RESET} ← origin/$cur"; fi
+        if [[ "$oa" -eq 0 && "$ob" -eq 0 ]]; then echo "  ${C_DIM}origin/$cur 已同步${C_RESET}"; fi
+      else
+        echo "  ${C_DIM}(origin fetch 失败/超时)${C_RESET}"
+      fi
+    fi
+
+    # upstream(官方)= sync 目标
+    git remote get-url upstream >/dev/null 2>&1 || { echo "  ${C_DIM}(no upstream remote)${C_RESET}"; exit 0; }
     if gitnet fetch upstream --quiet 2>/dev/null; then
       local ahead behind
       ahead="$(git rev-list --count "upstream/$default_branch..HEAD" 2>/dev/null || echo 0)"
       behind="$(git rev-list --count "HEAD..upstream/$default_branch" 2>/dev/null || echo 0)"
-      if [[ "$ahead" -gt 0 ]]; then echo "  ${C_YELLOW}↑ $ahead${C_RESET} ahead of upstream/$default_branch"; fi
-      if [[ "$behind" -gt 0 ]]; then echo "  ${C_YELLOW}↓ $behind${C_RESET} behind upstream/$default_branch (run sync)"; fi
-      if [[ "$ahead" -eq 0 && "$behind" -eq 0 ]]; then echo "  ${C_DIM}up to date with upstream/$default_branch${C_RESET}"; fi
+      if [[ "$behind" -gt 0 ]]; then echo "  ${C_DIM}↓ $behind behind upstream/$default_branch (可 sync)${C_RESET}"; fi
     else
       echo "  ${C_DIM}(upstream fetch failed/timeout — skipped)${C_RESET}"
     fi
@@ -394,8 +408,8 @@ Usage: $0 <command> [repo] [flags]
 Commands:
   clone  [repo]              Clone plugins from your forks (parallel, fork default branch)
   setup  [repo]              Configure upstream + origin remotes
-  status [repo] [--fetch]    Show branch + local changes. --fetch also compares upstream
-  commits [repo]             Show latest commit of main + each plugin (+ ahead/behind origin)
+  status [repo] [--fetch]    分支+本地改动;--fetch 联网比对 origin(↑待push/↓待pull)+ upstream(可sync)
+  commits [repo]             各仓最新提交(快速本地视图;↑/↓基于本地ref,准确推拉状态用 status --fetch)
   diff   [repo]              Show staged/unstaged diff stat per repo (read-only)
   sync   [repo]              Merge upstream default branch into current branch
   commit "<msg>" [repo|all]  Stage all (-A) + commit dirty repos with one message
