@@ -320,6 +320,25 @@ cmd_push() {
   print_summary
 }
 
+# ── pull (deployment: fast-forward current branch from your fork) ───────────────
+_pull_one() {
+  local rel="$1" upstream_url="$2" fork_url="$3" default_branch="$4" dir="$5" label="$6"
+  (
+    cd "$dir" || exit 1
+    local cur; cur="$(git branch --show-current)"
+    if gitnet pull --ff-only origin "$cur"; then
+      echo "  ${C_GREEN}pulled${C_RESET} origin/$cur"
+    else
+      echo "  ${C_RED}pull 失败${C_RESET}(本地有未提交改动或已分叉 → 先 git stash/commit 或手动处理)"; exit 1
+    fi
+  ) || note_fail "$label (pull)"
+}
+cmd_pull() {
+  echo "=== Pulling from your forks (origin, ff-only) ==="
+  for_each_repo _pull_one "${1:-}"
+  print_summary
+}
+
 # ── diff (read-only) ─────────────────────────────────────────────────────────--
 _diff_one() {
   local rel="$1" upstream_url="$2" fork_url="$3" default_branch="$4" dir="$5" label="$6"
@@ -411,9 +430,10 @@ Commands:
   status [repo] [--fetch]    分支+本地改动;--fetch 联网比对 origin(↑待push/↓待pull)+ upstream(可sync)
   commits [repo]             各仓最新提交(快速本地视图;↑/↓基于本地ref,准确推拉状态用 status --fetch)
   diff   [repo]              Show staged/unstaged diff stat per repo (read-only)
-  sync   [repo]              Merge upstream default branch into current branch
+  sync   [repo]              Merge upstream(官方)default branch into current branch
   commit "<msg>" [repo|all]  Stage all (-A) + commit dirty repos with one message
-  push   [repo]              Push current branch to your fork
+  push   [repo]              Push current branch to your fork(origin)
+  pull   [repo]              Fast-forward current branch from your fork(origin)— 部署端更新用
   branch <repo|all> <name>   Create/switch a feature branch
 
 [repo] is optional — omit to run on ALL repos, or pass a short name:
@@ -446,6 +466,7 @@ case "$cmd" in
   commits|commit-log|log) cmd_commits "${1:-}" ;;
   diff)   cmd_diff   "${1:-}" ;;
   sync)   cmd_sync   "${1:-}" ;;
+  pull)   cmd_pull   "${1:-}" ;;
   commit) cmd_commit "${1:-}" "${2:-}" ;;
   push)   cmd_push   "${1:-}" ;;
   branch) cmd_branch "${1:-}" "${2:-}" ;;
