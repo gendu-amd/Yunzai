@@ -29,6 +29,9 @@ REPOS=(
   "plugins/xiaoyao-cvs-plugin|https://github.com/Ctrlcvs/xiaoyao-cvs-plugin.git|https://github.com/gendu-amd/xiaoyao-cvs-plugin.git|master"
   "plugins/ark-plugin|https://github.com/NotIvny/ark-plugin.git|https://github.com/gendu-amd/ark-plugin.git|main"
   "plugins/ZZZ-Plugin|https://github.com/ZZZure/ZZZ-Plugin.git|https://github.com/gendu-amd/ZZZ-Plugin.git|main"
+  "plugins/StarRail-plugin|https://github.com/TsukinaKasumi/StarRail-plugin.git|https://github.com/gendu-amd/StarRail-plugin.git|main"
+  "plugins/yenai-plugin|https://github.com/yeyang52/yenai-plugin.git|https://github.com/gendu-amd/yenai-plugin.git|v2"
+  "plugins/WeChat-Plugin|https://github.com/TimeRainStarSky/Yunzai-WeChat-Plugin.git|https://github.com/gendu-amd/Yunzai-WeChat-Plugin.git|main"
 )
 
 # ── colors (auto-disabled when not a TTY) ──────────────────────────────────────
