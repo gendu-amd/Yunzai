@@ -105,7 +105,7 @@ OICQ/协议事件 → lib/events/{message,notice,request}.js → PluginsLoader.d
 
 **【F】单体派发 + 未接线子系统 + 死代码**
 - `[高]` `lib/plugins/handler.js` 整个 Handler 子系统全仓零消费(`callAll` 空体)
-- `[高]` `lib/plugins/config.js:makeConfig` 零引用死文件;`lib/common/common.js` 大部分零引用
+- `[高]` ~~`lib/plugins/config.js:makeConfig` 零引用死文件~~ **更正**:本仓零引用,但它是**框架对外 API**(第三方插件如 WeChat-Plugin 会 import),非死代码,**已恢复**,勿删;`lib/common/common.js` 大部分零引用(同理需先确认无外部插件依赖)
 - `[中]` `_mwDispatch` 首个 rule 命中即 return;`notice/request` 也跑完整 `deal`(含游戏/账号 init)
 - `[中]` 热更 `changePlugin` 只改 priority,不刷新 Handler/定时任务/adapter
 
@@ -226,6 +226,6 @@ OICQ/协议事件 → lib/events/{message,notice,request}.js → PluginsLoader.d
   - **【E】契约坏**:`rendererPort` 改读 `RendererLoader` 真后端(弃 `global.Renderer`)。
   - **【L】适配器**:`OPQBot` 超时用 `Bot[id].ws`;`ComWeChat.makeRequest` 设 `request_type`。
   - **【T】凭证**:`#我的ck` 群聊不再明文回显 Cookie(仅私聊)。
-  - **【F】死代码**:删零引用的 `lib/plugins/config.js`(`makeConfig`)。
+  - **【F】死代码**:~~删 `lib/plugins/config.js`(`makeConfig`)~~ **已撤销/恢复**(它是框架对外 API,第三方插件在用,误删)。
   - 未做(需 PC/数据等价/排名服务终验):P2 SSOT 收敛、P3 状态统一、P4 适配层去重、P5 解倒挂、P6 ark/出图终验;
     及无 TTL key 加期(`Yz:count`/`apgl`/`miao:rank` 等改动可能丢数据,需 PC 评估)、xiaoyao `lib/app/*` 死分支(控制流复杂)、`common.js` 部分死代码(被 runtime import)。
